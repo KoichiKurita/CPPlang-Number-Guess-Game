@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Number Guess Game (C++)
 
 ## Overview
@@ -153,3 +154,7 @@ to improve testability, clarity, and architectural cleanliness.
 
 This evolution demonstrates deliberate architectural decision-making
 rather than accidental complexity.
+=======
+# CPPlang-Number-Guess-Game
+CPPlang Number Guess Game
+>>>>>>> dd25d95f99b648f3827f13a50aceb05b464545fb
