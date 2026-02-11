@@ -1,24 +1,37 @@
-name: Windows MinGW CI
+name: Windows CI (MinGW)
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+      # ① リポジトリをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Install MinGW
-      uses: msys2/setup-msys2@v2
-      with:
-        install: mingw-w64-x86_64-gcc cmake
+      # ② MSYS2 + MinGW + CMake をセットアップ
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
 
-    - name: Build
-      shell: msys2 {0}
-      run: |
-        mkdir -p build
-        cd build
-        cmake -G "MinGW Makefiles" ..
-        cmake --build .
-        ctest
+      # ③ ビルド & テスト
+      - name: Configure and Build
+        shell: msys2 {0}
+        run: |
+          cmake -S . -B build
+          cmake --build build
+
+      # ④ テスト（GoogleTest）
+      - name: Run tests
+        shell: msys2 {0}
+        run: |
+          ctest --test-dir build --output-on-failure
