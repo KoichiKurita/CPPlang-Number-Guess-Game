@@ -29,6 +29,7 @@ ctest
 ```
 
 ## Logic View
+```bat
 +-------------+       +----------------+
 |   Console   |       |     Qt UI      |
 |     UI      |       |                |
@@ -46,9 +47,10 @@ ctest
 |  GameState + GameEvent + GameLogic   |
 |     (Pure Functions / No I/O)        |
 +--------------------------------------+
-
+```
 
 ## Game Flow
+```bat
 User
  │
  │ guess number
@@ -70,6 +72,7 @@ GameController
  │ handleEvent(event)
  ▼
 UI
+```
 
 
 ## Architecture Overview
