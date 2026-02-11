@@ -1,0 +1,23 @@
+@startuml
+title Game Flow Sequence
+
+actor User
+participant UI
+participant GameController
+participant "Domain\n(GameLogic)" as Domain
+
+User -> UI : input number
+UI -> GameController : inputGuess()
+GameController -> Domain : guess(state, value)
+Domain --> GameController : (nextState, event)
+GameController -> UI : handleEvent(event)
+
+loop until finished
+  User -> UI : input number
+  UI -> GameController : inputGuess()
+  GameController -> Domain : guess(state, value)
+  Domain --> GameController : (nextState, event)
+  GameController -> UI : handleEvent(event)
+end
+
+@enduml
