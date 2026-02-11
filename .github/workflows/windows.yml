@@ -9,11 +9,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # ① リポジトリをチェックアウト
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # ② MSYS2 + MinGW + CMake をセットアップ
       - name: Set up MSYS2
         uses: msys2/setup-msys2@v2
         with:
@@ -23,15 +20,14 @@ jobs:
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-ninja
 
-      # ③ ビルド & テスト
       - name: Configure and Build
         shell: msys2 {0}
         run: |
-          cmake -S . -B build
-          cmake --build build
+          rm -rf build-ci
+          cmake -S . -B build-ci
+          cmake --build build-ci
 
-      # ④ テスト（GoogleTest）
       - name: Run tests
         shell: msys2 {0}
         run: |
-          ctest --test-dir build --output-on-failure
+          ctest --test-dir build-ci --output-on-failure
