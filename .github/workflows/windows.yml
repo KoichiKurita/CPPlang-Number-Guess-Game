@@ -19,6 +19,6 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        cmake -G "MinGW Makefiles" ..
-        cmake --build .
+        cmake -S . -B build
+        cmake --build build
         ctest
