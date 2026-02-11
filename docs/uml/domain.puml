@@ -1,0 +1,29 @@
+@startuml
+title Domain Model (Pure Function)
+
+class GameState {
+  Difficulty diff
+  int answer
+  int attempts
+  bool finished
+}
+
+class GameEvent
+class TooSmall
+class TooLarge
+class Correct {
+  int attempts
+}
+
+GameEvent <|-- TooSmall
+GameEvent <|-- TooLarge
+GameEvent <|-- Correct
+
+class GameLogic {
+  +guess(state, value) : (GameState, GameEvent)
+}
+
+GameLogic --> GameState
+GameLogic --> GameEvent
+
+@enduml

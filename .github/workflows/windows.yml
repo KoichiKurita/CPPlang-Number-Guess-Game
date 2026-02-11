@@ -1,0 +1,24 @@
+name: Windows MinGW CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install MinGW
+      uses: msys2/setup-msys2@v2
+      with:
+        install: mingw-w64-x86_64-gcc cmake
+
+    - name: Build
+      shell: msys2 {0}
+      run: |
+        mkdir build
+        cd build
+        cmake -G "MinGW Makefiles" ..
+        cmake --build .
+        ctest

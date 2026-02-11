@@ -1,0 +1,38 @@
+@startuml
+title Number Guess Game - Architecture
+
+package "UI Layer" {
+  interface IGameUI
+  class ConsoleUI
+  class QtGameUI
+
+  IGameUI <|.. ConsoleUI
+  IGameUI <|.. QtGameUI
+}
+
+package "Application Layer" {
+  class GameController
+}
+
+package "Domain Layer\n(Pure Functions)" {
+  class GameState
+  class GameEvent
+  class GameLogic
+}
+
+package "Infrastructure Layer" {
+  interface IRandom
+  interface IScoreRepository
+  class RandomMT
+  class CsvScoreRepository
+
+  IRandom <|.. RandomMT
+  IScoreRepository <|.. CsvScoreRepository
+}
+
+GameController --> IGameUI
+GameController --> IRandom
+GameController --> IScoreRepository
+GameController --> GameLogic
+
+@enduml
