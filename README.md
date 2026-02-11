@@ -26,7 +26,7 @@ cd build
 cmake -G "MinGW Makefiles" ..
 cmake --build .
 ctest
-
+```
 
 ## Logic View
 +-------------+       +----------------+
@@ -46,7 +46,6 @@ ctest
 |  GameState + GameEvent + GameLogic   |
 |     (Pure Functions / No I/O)        |
 +--------------------------------------+
-
 
 
 ## Game Flow
