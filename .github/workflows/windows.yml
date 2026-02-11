@@ -1,0 +1,33 @@
+name: Windows CI (MinGW)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+
+      - name: Configure and Build
+        shell: msys2 {0}
+        run: |
+          rm -rf build-ci
+          cmake -S . -B build-ci
+          cmake --build build-ci
+
+      - name: Run tests
+        shell: msys2 {0}
+        run: |
+          ctest --test-dir build-ci --output-on-failure
