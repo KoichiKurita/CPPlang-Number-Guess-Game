@@ -155,3 +155,11 @@ to improve testability, clarity, and architectural cleanliness.
 
 This evolution demonstrates deliberate architectural decision-making
 rather than accidental complexity.
+
+## Development Note
+
+This project was developed with the assistance of AI tools (ChatGPT)
+for architectural guidance, debugging, and best practices.
+
+All integration, configuration, and final implementation were
+performed and validated by the author.
