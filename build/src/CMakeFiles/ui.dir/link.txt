@@ -1,2 +1,0 @@
-C:\msys64\ucrt64\bin\ar.exe qc libui.a CMakeFiles/ui.dir/ui/ConsoleUI.cpp.obj
-C:\msys64\ucrt64\bin\ranlib.exe libui.a

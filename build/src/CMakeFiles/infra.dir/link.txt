@@ -1,2 +1,0 @@
-C:\msys64\ucrt64\bin\ar.exe qc libinfra.a CMakeFiles/infra.dir/infra/RandomMT.cpp.obj CMakeFiles/infra.dir/infra/CsvScoreRepository.cpp.obj
-C:\msys64\ucrt64\bin\ranlib.exe libinfra.a
