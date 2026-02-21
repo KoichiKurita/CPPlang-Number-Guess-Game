@@ -1,2 +1,0 @@
-C:\msys64\ucrt64\bin\ar.exe qc libdomain.a CMakeFiles/domain.dir/domain/Game.cpp.obj
-C:\msys64\ucrt64\bin\ranlib.exe libdomain.a

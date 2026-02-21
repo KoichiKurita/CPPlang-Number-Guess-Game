@@ -1,0 +1,61 @@
+# =========================
+# Build artifacts
+# =========================
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# =========================
+# Executables
+# =========================
+*.exe
+*.out
+*.app
+
+# =========================
+# Object files
+# =========================
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+
+# =========================
+# Qt auto-generated files
+# =========================
+moc_*
+qrc_*
+ui_*
+*.autosave
+
+# =========================
+# VSCode
+# =========================
+.vscode/
+
+# =========================
+# Visual Studio (if ever opened)
+# =========================
+.vs/
+*.vcxproj*
+*.sln
+
+# =========================
+# macOS
+# =========================
+.DS_Store
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# PlantUML temporary files
+# =========================
+*.puml~
