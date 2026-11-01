@@ -18,7 +18,7 @@ void GameController::run() {
     GameState state{ diff, answer, 0, false };
 
     while (!state.finished) {
-        int value = ui_.inputGuess();
+        int value = ui_.inputGuess(diff);
         auto [nextState, event] = guess(state, value);
         state = nextState;
         ui_.handleEvent(event);
