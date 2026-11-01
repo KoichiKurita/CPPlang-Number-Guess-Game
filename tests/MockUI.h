@@ -1,33 +1,38 @@
 #pragma once
 #include "../src/ui/IGameUI.h"
-#include <queue>
 
+#include <queue>
+#include <utility>
+#include <vector>
+
+// 決められた難易度と予想値を順に返す UI。
+// 予想値を使い切ったら、EOF と同じく InputClosedError を投げる。
 class MockUI : public IGameUI {
 public:
-    explicit MockUI(Difficulty diff, std::queue<int> guesses)
-        : diff_(diff), guesses_(guesses), resultShown_(false) {}
+    MockUI(Difficulty diff, std::queue<int> guesses)
+        : diff_(std::move(diff)), guesses_(std::move(guesses)) {}
 
     Difficulty selectDifficulty() override {
         return diff_;
     }
 
-    int inputGuess() override {
-        int v = guesses_.front();
+    int inputGuess(const Difficulty&) override {
+        if (guesses_.empty()) {
+            throw InputClosedError{};
+        }
+        const int v = guesses_.front();
         guesses_.pop();
         return v;
     }
 
-    void showResult(int attempts) override {
-        attempts_ = attempts;
-        resultShown_ = true;
+    void handleEvent(const GameEvent& event) override {
+        events_.push_back(event);
     }
 
-    bool resultShown() const { return resultShown_; }
-    int attempts() const { return attempts_; }
+    const std::vector<GameEvent>& events() const { return events_; }
 
 private:
     Difficulty diff_;
     std::queue<int> guesses_;
-    bool resultShown_;
-    int attempts_;
+    std::vector<GameEvent> events_;
 };
