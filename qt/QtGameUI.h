@@ -10,7 +10,7 @@ public:
         return Difficulty::Normal(); // 簡略
     }
 
-    int inputGuess() override {
+    int inputGuess(const Difficulty&) override {
         return currentGuess_; // 本来はUI入力
     }
 
