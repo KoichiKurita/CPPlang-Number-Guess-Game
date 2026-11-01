@@ -9,3 +9,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(src)
+
+# テスト（-DBUILD_TESTING=OFF で無効化できる）
+include(CTest)
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
