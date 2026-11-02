@@ -16,6 +16,10 @@ public:
     void run();
 
 private:
+    // スコアを保存し、最高記録を表示する。
+    // 保存・読み込みの失敗ではゲームを異常終了させず、警告の表示にとどめる。
+    void recordScore(const ScoreRecord& record);
+
     IRandom& random_;
     IScoreRepository& repo_;
     IGameUI& ui_;

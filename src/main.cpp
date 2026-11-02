@@ -2,6 +2,7 @@
 #include "app/ports/IGameUI.h"
 #include "infra/RandomMT.h"
 #include "infra/CsvScoreRepository.h"
+#include "infra/ScoreFilePath.h"
 #include "ui/ConsoleUI.h"
 
 #include <cstdlib>
@@ -12,8 +13,10 @@
 int main() {
     try {
         RandomMT random;
-        CsvScoreRepository repo;
+        CsvScoreRepository repo(defaultScoreFilePath());
         ConsoleUI ui;
+
+        std::cout << "Scores are saved to: " << repo.file().string() << "\n\n";
 
         GameController controller(random, repo, ui);
         controller.run();

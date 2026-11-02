@@ -2,11 +2,20 @@
 
 #include "app/ports/IScoreRepository.h"
 
-#include <string>
+#include <filesystem>
+#include <vector>
 
-// スコアを CSV ファイル（scores.csv）に追記する IScoreRepository の実装。
-// 保存先の指定やエラー処理はステップ5で改善する。
+// スコアを CSV ファイルに追記・読み込みする IScoreRepository の実装。
+// 形式: 1行目がヘッダ（player,difficulty,attempts）、以降1行1件。
 class CsvScoreRepository : public IScoreRepository {
 public:
-    void save(const std::string& difficulty, int attempts) override;
+    explicit CsvScoreRepository(std::filesystem::path file);
+
+    void save(const ScoreRecord& record) override;
+    std::vector<ScoreRecord> loadAll() const override;
+
+    const std::filesystem::path& file() const { return file_; }
+
+private:
+    std::filesystem::path file_;
 };

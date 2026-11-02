@@ -11,9 +11,12 @@ public:
     ConsoleUI();
     ConsoleUI(std::istream& in, std::ostream& out);
 
+    std::string inputPlayerName() override;
     Difficulty selectDifficulty() override;
     int inputGuess(const Difficulty& diff) override;
     void handleEvent(const GameEvent& event) override;
+    void showBestScore(const ScoreRecord& best, bool isNewRecord) override;
+    void showWarning(const std::string& message) override;
 
 private:
     // 1行読み込む。EOF やストリームエラーなら InputClosedError を投げる。
