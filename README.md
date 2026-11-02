@@ -4,6 +4,7 @@
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-blue)
 ![CMake](https://img.shields.io/badge/CMake-3.21%2B-informational)
 ![Qt](https://img.shields.io/badge/Qt-6-41cd52)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 1〜N の数を当てる、シンプルな数当てゲームです。
 ゲーム自体は小さく保ち、**設計・テスト容易性・品質保証（CI / 静的・動的解析）・セキュリティ**を実践するための C++ ポートフォリオとして作っています。
@@ -170,6 +171,13 @@ flowchart TD
 5. **GUI 対応（v2.0.0）**：同期ループを「1 手ずつ」進める `GameSession` に分離し、Console 版と Qt 版でロジックを共有。
 
 各段階の変更内容は、[Releases](https://github.com/KoichiKurita/CPPlang-Number-Guess-Game/releases) と Pull Request で確認できます。
+
+## ライセンス
+
+このプロジェクトのソースコードは [MIT License](LICENSE) で公開しています。
+
+Windows 向けの配布パッケージには、[Qt 6](https://www.qt.io/)（LGPL v3）と、Qt が依存するライブラリの DLL を変更せずに同梱しています。
+各ライブラリのライセンス文書は、配布 zip の `licenses` フォルダに含まれています。
 
 ## 開発について
 
