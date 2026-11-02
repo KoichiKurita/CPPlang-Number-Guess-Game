@@ -36,6 +36,15 @@
       }
     },
     {
+      "name": "qt",
+      "displayName": "Qt GUI (Ninja, Debug, warnings as errors)",
+      "description": "Builds the console app, the Qt GUI and all tests. Requires Qt6.",
+      "inherits": "ci",
+      "cacheVariables": {
+        "NGG_BUILD_QT": "ON"
+      }
+    },
+    {
       "name": "msvc",
       "displayName": "MSVC (Visual Studio, warnings as errors)",
       "description": "Uses the newest installed Visual Studio generator.",
@@ -54,6 +63,7 @@
     { "name": "dev",  "configurePreset": "dev" },
     { "name": "ci",   "configurePreset": "ci" },
     { "name": "asan", "configurePreset": "asan" },
+    { "name": "qt",   "configurePreset": "qt" },
     { "name": "msvc", "configurePreset": "msvc", "configuration": "Debug" }
   ],
   "testPresets": [
@@ -65,6 +75,7 @@
     },
     { "name": "dev",  "inherits": "base", "configurePreset": "dev" },
     { "name": "ci",   "inherits": "base", "configurePreset": "ci" },
+    { "name": "qt",   "inherits": "base", "configurePreset": "qt" },
     {
       "name": "asan",
       "inherits": "base",
