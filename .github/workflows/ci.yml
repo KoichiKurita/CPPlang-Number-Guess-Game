@@ -30,18 +30,19 @@ jobs:
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-qt6-base
 
       - name: Configure
         shell: msys2 {0}
-        run: cmake --preset ci
+        run: cmake --preset qt
 
       - name: Build
         shell: msys2 {0}
-        run: cmake --build --preset ci
+        run: cmake --build --preset qt
 
       - name: Test
         shell: msys2 {0}
-        run: ctest --preset ci
+        run: ctest --preset qt
 
   windows-msvc:
     name: Windows (MSVC)
@@ -86,3 +87,23 @@ jobs:
 
       - name: Test
         run: ctest --preset asan
+
+  linux-qt:
+    name: Linux (GCC, Qt GUI)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build qt6-base-dev
+
+      - name: Configure
+        run: cmake --preset qt
+
+      - name: Build
+        run: cmake --build --preset qt
+
+      - name: Test
+        run: ctest --preset qt
