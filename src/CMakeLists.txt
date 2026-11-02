@@ -15,5 +15,8 @@ target_link_libraries(NumberGuessGame
         ngg::app
         ngg::infra
         ngg::ui
+        ngg::version
         ngg::warnings
 )
+
+install(TARGETS NumberGuessGame RUNTIME DESTINATION ${NGG_INSTALL_BINDIR})

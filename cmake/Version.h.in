@@ -1,0 +1,6 @@
+#pragma once
+
+// CMake の project(VERSION) から生成されるファイル。直接編集しない。
+// 生成先: <ビルドフォルダ>/generated/Version.h
+inline constexpr const char* kAppName = "Number Guess Game";
+inline constexpr const char* kAppVersion = "@PROJECT_VERSION@";
