@@ -1,5 +1,5 @@
 #pragma once
-#include "../src/ui/IGameUI.h"
+#include "app/ports/IGameUI.h"
 
 #include <queue>
 #include <utility>

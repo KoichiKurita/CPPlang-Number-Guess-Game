@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/ui/ConsoleUI.h"
+#include "ui/ConsoleUI.h"
 
 #include <sstream>
 #include <string>

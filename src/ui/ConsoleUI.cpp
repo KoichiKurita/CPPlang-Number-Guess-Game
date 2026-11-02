@@ -1,6 +1,6 @@
-#include "ConsoleUI.h"
+#include "ui/ConsoleUI.h"
 
-#include "../domain/InputParser.h"
+#include "domain/InputParser.h"
 
 #include <iostream>
 #include <type_traits>

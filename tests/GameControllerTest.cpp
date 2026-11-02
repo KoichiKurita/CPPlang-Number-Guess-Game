@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/app/GameController.h"
+#include "app/GameController.h"
 #include "MockRandom.h"
 #include "MockUI.h"
 #include "SpyScoreRepository.h"

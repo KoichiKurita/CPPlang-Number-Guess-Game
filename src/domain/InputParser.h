@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Difficulty.h"
+#include "domain/Difficulty.h"
 
 #include <charconv>
 #include <optional>

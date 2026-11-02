@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/domain/GameLogic.h"
+#include "domain/GameLogic.h"
 
 #include <variant>
 
