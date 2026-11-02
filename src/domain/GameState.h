@@ -1,5 +1,5 @@
 #pragma once
-#include "Difficulty.h"
+#include "domain/Difficulty.h"
 
 struct GameState {
     Difficulty diff;

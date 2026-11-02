@@ -1,12 +1,10 @@
 #pragma once
 
-#include "../domain/GameState.h"
-#include "../domain/GameEvent.h"
-#include "../domain/GameLogic.h"
-#include "../infra/IRandom.h"
-#include "../infra/IScoreRepository.h"
-#include "../ui/IGameUI.h"
+#include "app/ports/IGameUI.h"
+#include "app/ports/IRandom.h"
+#include "app/ports/IScoreRepository.h"
 
+// 1ゲームの進行を制御する。具体的な UI・乱数・保存先は知らず、ポート経由で扱う。
 class GameController {
 public:
     GameController(
@@ -18,6 +16,10 @@ public:
     void run();
 
 private:
+    // スコアを保存し、最高記録を表示する。
+    // 保存・読み込みの失敗ではゲームを異常終了させず、警告の表示にとどめる。
+    void recordScore(const ScoreRecord& record);
+
     IRandom& random_;
     IScoreRepository& repo_;
     IGameUI& ui_;

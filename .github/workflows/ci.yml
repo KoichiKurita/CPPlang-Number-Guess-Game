@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+# 最小権限: このワークフローはリポジトリの読み取りしか必要としない
+permissions:
+  contents: read
+
+# 同じブランチ/PR で新しい実行が始まったら、古い実行はキャンセルする
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-mingw:
+    name: Windows (MinGW GCC)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+
+      - name: Configure
+        shell: msys2 {0}
+        run: cmake --preset ci
+
+      - name: Build
+        shell: msys2 {0}
+        run: cmake --build --preset ci
+
+      - name: Test
+        shell: msys2 {0}
+        run: ctest --preset ci
+
+  windows-msvc:
+    name: Windows (MSVC)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake --preset msvc
+
+      - name: Build
+        run: cmake --build --preset msvc
+
+      - name: Test
+        run: ctest --preset msvc
+
+  linux-sanitizers:
+    name: Linux (${{ matrix.compiler.name }}, ASan + UBSan)
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false   # 片方が失敗しても、もう片方の結果も確認できるようにする
+      matrix:
+        compiler:
+          - { name: GCC,   cc: gcc,   cxx: g++,     packages: "" }
+          - { name: Clang, cc: clang, cxx: clang++, packages: "libclang-rt-dev" }  # Clang のサニタイザ用ランタイム
+    env:
+      CC: ${{ matrix.compiler.cc }}
+      CXX: ${{ matrix.compiler.cxx }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build ${{ matrix.compiler.packages }}
+
+      - name: Configure
+        run: cmake --preset asan
+
+      - name: Build
+        run: cmake --build --preset asan
+
+      - name: Test
+        run: ctest --preset asan

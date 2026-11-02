@@ -1,6 +1,6 @@
 #pragma once
-#include "GameState.h"
-#include "GameEvent.h"
+#include "domain/GameState.h"
+#include "domain/GameEvent.h"
 #include <utility>
 
 inline std::pair<GameState, GameEvent>

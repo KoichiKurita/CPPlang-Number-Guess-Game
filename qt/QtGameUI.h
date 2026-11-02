@@ -1,5 +1,5 @@
 #pragma once
-#include "../src/ui/IGameUI.h"
+#include "app/ports/IGameUI.h"
 #include <QObject>
 #include <QMessageBox>
 
@@ -10,7 +10,7 @@ public:
         return Difficulty::Normal(); // 簡略
     }
 
-    int inputGuess() override {
+    int inputGuess(const Difficulty&) override {
         return currentGuess_; // 本来はUI入力
     }
 

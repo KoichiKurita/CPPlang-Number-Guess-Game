@@ -1,33 +1,62 @@
 #pragma once
-#include "../src/ui/IGameUI.h"
-#include <queue>
+#include "app/ports/IGameUI.h"
 
+#include <optional>
+#include <queue>
+#include <string>
+#include <utility>
+#include <vector>
+
+// 決められたプレイヤー名・難易度・予想値を順に返す UI。
+// 予想値を使い切ったら、EOF と同じく InputClosedError を投げる。
 class MockUI : public IGameUI {
 public:
-    explicit MockUI(Difficulty diff, std::queue<int> guesses)
-        : diff_(diff), guesses_(guesses), resultShown_(false) {}
+    struct BestScoreShown {
+        ScoreRecord best;
+        bool isNewRecord;
+    };
+
+    MockUI(Difficulty diff, std::queue<int> guesses, std::string player = "Ko1")
+        : player_(std::move(player)), diff_(std::move(diff)), guesses_(std::move(guesses)) {}
+
+    std::string inputPlayerName() override {
+        return player_;
+    }
 
     Difficulty selectDifficulty() override {
         return diff_;
     }
 
-    int inputGuess() override {
-        int v = guesses_.front();
+    int inputGuess(const Difficulty&) override {
+        if (guesses_.empty()) {
+            throw InputClosedError{};
+        }
+        const int v = guesses_.front();
         guesses_.pop();
         return v;
     }
 
-    void showResult(int attempts) override {
-        attempts_ = attempts;
-        resultShown_ = true;
+    void handleEvent(const GameEvent& event) override {
+        events_.push_back(event);
     }
 
-    bool resultShown() const { return resultShown_; }
-    int attempts() const { return attempts_; }
+    void showBestScore(const ScoreRecord& best, bool isNewRecord) override {
+        bestScoreShown_ = BestScoreShown{best, isNewRecord};
+    }
+
+    void showWarning(const std::string& message) override {
+        warnings_.push_back(message);
+    }
+
+    const std::vector<GameEvent>& events() const { return events_; }
+    const std::optional<BestScoreShown>& bestScoreShown() const { return bestScoreShown_; }
+    const std::vector<std::string>& warnings() const { return warnings_; }
 
 private:
+    std::string player_;
     Difficulty diff_;
     std::queue<int> guesses_;
-    bool resultShown_;
-    int attempts_;
+    std::vector<GameEvent> events_;
+    std::optional<BestScoreShown> bestScoreShown_;
+    std::vector<std::string> warnings_;
 };
