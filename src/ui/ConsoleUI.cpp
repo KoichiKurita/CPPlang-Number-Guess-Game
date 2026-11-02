@@ -1,6 +1,7 @@
 #include "ui/ConsoleUI.h"
 
 #include "domain/InputParser.h"
+#include "domain/PlayerName.h"
 
 #include <iostream>
 #include <type_traits>
@@ -20,6 +21,16 @@ const char* errorMessage(InputError e) {
     return "Invalid input.";
 }
 
+const char* nameErrorMessage(NameError e) {
+    switch (e) {
+        case NameError::Empty:            return "Please enter a name.";
+        case NameError::TooLong:          return "Name is too long.";
+        case NameError::InvalidStart:     return "Name must start with a letter or digit.";
+        case NameError::InvalidCharacter: return "Use only letters, digits, spaces, '_' or '-'.";
+    }
+    return "Invalid name.";
+}
+
 } // namespace
 
 ConsoleUI::ConsoleUI() : ConsoleUI(std::cin, std::cout) {}
@@ -36,6 +47,18 @@ std::string ConsoleUI::readLine() {
         line.clear();  // 長すぎる入力は破棄して「空入力」として扱う
     }
     return line;
+}
+
+std::string ConsoleUI::inputPlayerName() {
+    while (true) {
+        out_ << "Your name (1-" << kMaxPlayerNameLength << " chars): " << std::flush;
+        const NameResult r = parsePlayerName(readLine());
+
+        if (const std::string* name = std::get_if<std::string>(&r)) {
+            return *name;
+        }
+        out_ << nameErrorMessage(std::get<NameError>(r)) << "\n";
+    }
 }
 
 Difficulty ConsoleUI::selectDifficulty() {
@@ -74,4 +97,17 @@ void ConsoleUI::handleEvent(const GameEvent& event) {
             out_ << "Correct! Attempts: " << e.attempts << "\n";
         }
     }, event);
+}
+
+
+void ConsoleUI::showBestScore(const ScoreRecord& best, bool isNewRecord) {
+    if (isNewRecord) {
+        out_ << "New record! ";
+    }
+    out_ << "Best for " << best.difficulty << ": "
+         << best.attempts << " attempts by " << best.player << "\n";
+}
+
+void ConsoleUI::showWarning(const std::string& message) {
+    out_ << "Warning: " << message << "\n";
 }
