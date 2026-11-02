@@ -1,165 +1,177 @@
-# Number Guess Game (C++)
+# Number Guess Game（C++）
 
-## Overview
-A C++ number guessing game designed to demonstrate
-advanced software design and testability.
+[![CI](https://github.com/KoichiKurita/CPPlang-Number-Guess-Game/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/KoichiKurita/CPPlang-Number-Guess-Game/actions/workflows/ci.yml)
+![C++17](https://img.shields.io/badge/C%2B%2B-17-blue)
+![CMake](https://img.shields.io/badge/CMake-3.21%2B-informational)
+![Qt](https://img.shields.io/badge/Qt-6-41cd52)
 
-## Architecture
-- Domain layer is fully independent from UI and infrastructure.
-- State pattern is used to manage game states (Playing / Finished).
-- Dependency Injection enables mocking and testing.
+1〜N の数を当てる、シンプルな数当てゲームです。
+ゲーム自体は小さく保ち、**設計・テスト容易性・品質保証（CI / 静的・動的解析）・セキュリティ**を実践するための C++ ポートフォリオとして作っています。
 
-## Structure
-- domain: core game rules
-- app: application control logic
-- infra: random generation and persistence
-- ui: console / Qt UI implementations
+![Qt 版の画面](docs/images/qt-gui.png)
 
-## Testing
-- GoogleTest with mocked Random and UI components
-- Domain and controller logic are fully testable
+## 特徴
 
-## Build
-```bat
-mkdir build
-cd build
-cmake -G "MinGW Makefiles" ..
-cmake --build .
-ctest
+| 観点 | 内容 |
+|---|---|
+| 設計 | レイヤードアーキテクチャ＋ポート&アダプタ。ゲームのルールは I/O を持たない純粋関数 |
+| UI | 同じロジックを **Console 版** と **Qt 6 版（GUI）** で共有 |
+| テスト | GoogleTest / Qt Test で **71 件**（純粋関数・テストダブル・実ファイル・画面操作・アーキテクチャテスト） |
+| CI | Windows（MinGW / MSVC）・Linux（GCC / Clang）の **5 ジョブ**。Linux では AddressSanitizer / UBSan |
+| 品質 | 警告をエラー扱い（`-Wall -Wextra -Wpedantic -Wconversion` ほか、MSVC は `/W4 /permissive-`） |
+| セキュリティ | 入力の許可リスト検証、CSV インジェクション対策（多層防御）、CI の最小権限 |
+| 信頼性 | 不正入力・EOF でも停止しない、保存失敗でゲームを落とさない、壊れたファイルを読み飛ばす |
+
+## 遊び方
+
+1. 名前を入力します（英数字・スペース・`_`・`-`、先頭は英数字、16 文字まで）。
+2. 難易度を選びます：Easy（1〜10）/ Normal（1〜50）/ Hard（1〜100）。
+3. 数を予想すると「Too small / Too large」のヒントが出ます。正解するまで続けます。
+4. 正解すると、難易度ごとの最高記録（最少回数）が表示されます。
+
+スコアは次の場所に CSV で保存されます（環境変数 `NGG_SCORE_FILE` で変更できます）。
+
+| OS | 保存先 |
+|---|---|
+| Windows | `%APPDATA%\NumberGuessGame\scores.csv` |
+| Linux / macOS | `$XDG_DATA_HOME/NumberGuessGame/scores.csv`（未設定なら `~/.local/share/...`） |
+
+## ビルドと実行
+
+### 必要なもの
+- C++17 コンパイラ（GCC / Clang / MSVC）
+- CMake 3.21 以上、Ninja
+- Qt 6（Qt 版をビルドする場合のみ）
+
+GoogleTest は CMake（FetchContent）が自動で取得します。
+
+### Windows（MSYS2 MINGW64）
+```bash
+pacman -S --needed mingw-w64-x86_64-gcc mingw-w64-x86_64-cmake \
+                   mingw-w64-x86_64-ninja mingw-w64-x86_64-qt6-base
+
+cmake --preset qt            # Console 版 + Qt 版 + テスト
+cmake --build --preset qt
+ctest --preset qt
+
+./build/qt/src/NumberGuessGame.exe      # Console 版
+./build/qt/qt/NumberGuessGameQt.exe     # Qt 版
 ```
 
-## Logic View
-```bat
-+-------------+       +----------------+
-|   Console   |       |     Qt UI      |
-|     UI      |       |                |
-+------+------+       +--------+-------+
-       |                        |
-       v                        v
-+--------------------------------------+
-|            Application                |
-|          (GameController)             |
-+--------------------------------------+
-                    |
-                    v
-+--------------------------------------+
-|              Domain                  |
-|  GameState + GameEvent + GameLogic   |
-|     (Pure Functions / No I/O)        |
-+--------------------------------------+
+### Linux（Ubuntu 24.04）
+```bash
+sudo apt-get install -y g++ cmake ninja-build qt6-base-dev
+
+cmake --preset qt && cmake --build --preset qt && ctest --preset qt
 ```
 
-## Game Flow
-```bat
-User
- │
- │ guess number
- ▼
-UI
- │
- │ inputGuess()
- ▼
-GameController
- │
- │ guess(state, value)
- ▼
-Domain (pure)
- │
- │ returns (nextState, event)
- ▼
-GameController
- │
- │ handleEvent(event)
- ▼
-UI
+### CMake プリセット
+
+| プリセット | 内容 |
+|---|---|
+| `dev` | ローカル開発用（警告は表示のみ） |
+| `ci` | 警告をエラー扱い（Console 版とテスト） |
+| `qt` | `ci` ＋ Qt 版 GUI と画面テスト |
+| `asan` | `ci` ＋ AddressSanitizer / UBSan（Linux / macOS の GCC・Clang） |
+| `msvc` | Visual Studio（Windows） |
+
+## アーキテクチャ
+
+```mermaid
+flowchart TD
+    root["main.cpp / qt/main.cpp<br/>Composition Root"]
+    ui["ui<br/>ConsoleUI"]
+    qt["qt<br/>GameWindow"]
+    infra["infra<br/>RandomMT / CsvScoreRepository"]
+    app["app<br/>GameSession / GameController<br/>ports: IGameUI / IRandom / IScoreRepository"]
+    domain["domain<br/>GameLogic / InputParser / PlayerName / HighScore<br/>純粋関数・I/O なし"]
+
+    root --> ui
+    root --> qt
+    root --> infra
+    ui --> app
+    qt --> app
+    infra -- ポートを実装 --> app
+    app --> domain
 ```
 
+- **domain**：ゲームのルールと入力検証。I/O もフレームワークも持たない純粋関数なので、そのままテストできます。
+- **app**：ゲームを「1 手ずつ」進める `GameSession` と、外部に求める機能のインターフェース（**ポート**）。具体的な実装は知りません（依存性逆転の原則）。
+- **ui / qt / infra**：ポートの実装（**アダプタ**）。Console と Qt は、同じ `GameSession` を、ループから呼ぶか、イベントから呼ぶかだけが違います。
 
-## Architecture Overview
+依存の向きは、CMake のターゲット（`PUBLIC` / `PRIVATE`）と、`ctest` で実行する**アーキテクチャテスト**（`cmake/CheckLayerDependencies.cmake`）で守っています。
 
-![Architecture](docs/images/architecture.png)
+設計の詳細（シーケンス図・ドメインモデル・エラー処理の方針・設計判断）は [docs/design.md](docs/design.md) にまとめています。
 
-This diagram shows the layered architecture of the application.
-The domain layer is completely independent from UI and infrastructure.
+## 品質保証
 
----
+### テスト（71 件）
 
-## Domain Model (Pure Functions)
+| 対象 | テスト | 手法 |
+|---|---|---|
+| domain | `GameLogicTest` / `InputParserTest` / `PlayerNameTest` / `HighScoreTest` | 純粋関数の入出力・境界値 |
+| app | `GameSessionTest` / `GameControllerTest` | Mock / Fake の注入、失敗の再現 |
+| infra | `RandomMTTest` / `CsvTest` / `CsvScoreRepositoryTest` | シード固定、ラウンドトリップ、一時フォルダの実ファイル |
+| ui | `ConsoleUITest` | `std::istringstream` / `std::ostringstream` の注入 |
+| qt | `GameWindowTest`（Qt Test） | 文字入力・クリック・Enter による画面操作（CI では offscreen） |
+| 構成 | `LayerDependencies` | レイヤー間の依存ルール違反と相対インクルードを検出 |
 
-![Domain](docs/images/domain.png)
+### CI（GitHub Actions）
 
-The domain consists only of immutable state and pure functions.
-No I/O or framework dependency exists in this layer.
+| ジョブ | 環境 | 目的 |
+|---|---|---|
+| Windows (MinGW GCC) | MSYS2 + Qt 6 | 開発環境と同じ構成。Qt 版を含む |
+| Windows (MSVC) | Visual Studio | MSVC 固有の警告・規格準拠 |
+| Linux (GCC, ASan + UBSan) | Ubuntu 24.04 | メモリ破壊・未定義動作の実行時検出 |
+| Linux (Clang, ASan + UBSan) | Ubuntu 24.04 | 別コンパイラでの警告とサニタイザ |
+| Linux (GCC, Qt GUI) | Ubuntu 24.04 + Qt 6 | Qt 版の別環境でのビルドと画面テスト |
 
----
+- テストが 0 件なら失敗にする（`noTestsAction: error`）
+- ワークフローの権限は `contents: read` のみ（最小権限）
+- `main` / `develop` はルールセットで保護（PR 必須・全ジョブ成功必須・強制 push 禁止）
 
-## Game Flow (Sequence Diagram)
+## セキュリティと信頼性
 
-![Sequence](docs/images/sequence_game.png)
+| 脅威・障害 | 対策 |
+|---|---|
+| 数字以外・範囲外・EOF の入力 | 1 行単位で読み、`std::from_chars` で厳密に変換。再入力させる。EOF は例外で `main` まで伝えて正常終了 |
+| 極端に長い入力 | 1 行 256 文字（Qt 版は入力欄の最大長）を超える入力は受け付けない |
+| CSV インジェクション（表計算ソフトでの数式実行） | ① 名前を許可リストで検証し先頭を英数字に限定 ② 書き出し時に `= + - @` で始まる値の先頭に `'` を付ける ③ 読み込み時に再検証 |
+| スコアファイルの改ざん・破損 | 壊れた行だけを読み飛ばして続行 |
+| 保存先に書き込めない・ディスクフル | `flush` 後のストリーム状態で検出し、警告を表示。ゲームは異常終了させない |
+| 未定義動作・メモリ破壊 | サニタイザ付きのテストを CI で常時実行 |
 
-Each user action produces a new state and a domain event,
-which is handled by the UI in an event-driven manner.
+## ディレクトリ構成
 
+```
+.
+├── src/
+│   ├── domain/   ゲームのルール・入力検証（ヘッダのみ・純粋関数）
+│   ├── app/      GameSession / GameController / ports（インターフェース）
+│   ├── infra/    乱数・CSV の保存・保存先の決定
+│   ├── ui/       Console 版 UI
+│   └── main.cpp  Console 版の Composition Root
+├── qt/           Qt 版 GUI（GameWindow / main.cpp / tests）
+├── tests/        GoogleTest のテストとテストダブル
+├── cmake/        警告設定・サニタイザ・アーキテクチャテスト
+├── docs/         設計ドキュメント
+├── CMakePresets.json
+└── .github/workflows/ci.yml
+```
 
-### Design Highlights
-- Domain logic is implemented as pure functions.
-- No class in the domain layer performs I/O or holds mutable state.
-- State transitions are explicit and represented as value transformations.
-- The same domain logic is reused by Console UI, Qt UI, and unit tests.
+## 設計の変遷
 
+このプロジェクトは、段階的に設計を見直しながら育ててきました。
 
-## Design Documentation
+1. **クラスベースの State パターン**：状態を仮想関数で表現。状態遷移の追跡が難しく、結合が強かった。
+2. **`std::variant` による状態機械**：状態を値として扱い、仮想関数をなくした。
+3. **純粋関数のドメイン**：`guess(state, value)` が「次の状態」と「イベント」を返す形にし、I/O から完全に分離した。
+4. **品質改善（v1.1.0）**：入力検証による無限ループの修正、テストの復活と拡充、ポートの app 層への移動、CI の多環境化とサニタイザ、スコア保存の信頼性・安全性の向上。
+5. **GUI 対応（v2.0.0）**：同期ループを「1 手ずつ」進める `GameSession` に分離し、Console 版と Qt 版でロジックを共有。
 
-This project includes UML diagrams written in PlantUML
-to clearly describe the architecture and design decisions.
+各段階の変更内容は、[Releases](https://github.com/KoichiKurita/CPPlang-Number-Guess-Game/releases) と Pull Request で確認できます。
 
-- `docs/uml/architecture.puml` : Overall layered architecture
-- `docs/uml/domain.puml`       : Domain model (pure functions)
-- `docs/uml/sequence_game.puml`: Game flow sequence
+## 開発について
 
-These diagrams reflect the clean architecture and
-immutable, event-driven domain design.
-
-
-## Design Evolution
-
-This project intentionally evolved through multiple design stages
-to improve testability, clarity, and architectural cleanliness.
-
-### Phase 1: Object-Oriented Design (Class-based State Pattern)
-- Game logic implemented with classes and virtual state objects.
-- State transitions handled via inheritance and polymorphism.
-- Issues:
-  - Tight coupling between domain logic and behavior.
-  - vtable dependencies and linker complexity.
-  - Harder to reason about state transitions.
-
-### Phase 2: Variant-based State Machine
-- Replaced virtual inheritance with `std::variant`.
-- State handled as value types instead of polymorphic objects.
-- Benefits:
-  - Compile-time exhaustiveness checking.
-  - Removal of vtable and runtime polymorphism.
-  - Clearer state transitions.
-
-### Phase 3: Pure Functional Domain (Final Design)
-- Domain logic rewritten as pure functions.
-- Game state represented as immutable value objects.
-- Each user action produces:
-  - A new game state
-  - A strongly-typed domain event (`std::variant`)
-- Results:
-  - Deterministic and fully testable domain logic.
-  - No dependency on UI, I/O, or frameworks.
-  - Same domain reused by Console UI, Qt UI, and unit tests.
-
-This evolution demonstrates deliberate architectural decision-making
-rather than accidental complexity.
-
-## Development Note
-
-This project was developed with the assistance of AI tools (ChatGPT)
-for architectural guidance, debugging, and best practices.
-
-All integration, configuration, and final implementation were
-performed and validated by the author.
+設計の検討・コードの提案・デバッグの補助に、生成 AI（ChatGPT、Claude）を利用しています。
+コードの転記・ビルド・デバッグ・動作確認・Issue / PR の管理、および最終的な判断は作者自身が行っています。

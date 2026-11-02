@@ -17,6 +17,7 @@ add_executable(GameTests
     GameLogicTest.cpp
     InputParserTest.cpp
     GameControllerTest.cpp
+    GameSessionTest.cpp
     ConsoleUITest.cpp
     RandomMTTest.cpp
     PlayerNameTest.cpp

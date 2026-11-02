@@ -1,5 +1,6 @@
 #include "ui/ConsoleUI.h"
 
+#include "app/Messages.h"
 #include "domain/InputParser.h"
 #include "domain/PlayerName.h"
 
@@ -11,25 +12,6 @@ namespace {
 
 // 入力行の最大長。極端に長い入力を数値として扱わないための上限。
 constexpr std::size_t kMaxLineLength = 256;
-
-const char* errorMessage(InputError e) {
-    switch (e) {
-        case InputError::Empty:      return "Please enter a number.";
-        case InputError::NotANumber: return "Invalid input. Digits only.";
-        case InputError::OutOfRange: return "Out of range.";
-    }
-    return "Invalid input.";
-}
-
-const char* nameErrorMessage(NameError e) {
-    switch (e) {
-        case NameError::Empty:            return "Please enter a name.";
-        case NameError::TooLong:          return "Name is too long.";
-        case NameError::InvalidStart:     return "Name must start with a letter or digit.";
-        case NameError::InvalidCharacter: return "Use only letters, digits, spaces, '_' or '-'.";
-    }
-    return "Invalid name.";
-}
 
 } // namespace
 
@@ -57,7 +39,7 @@ std::string ConsoleUI::inputPlayerName() {
         if (const std::string* name = std::get_if<std::string>(&r)) {
             return *name;
         }
-        out_ << nameErrorMessage(std::get<NameError>(r)) << "\n";
+        out_ << toMessage(std::get<NameError>(r)) << "\n";
     }
 }
 
@@ -79,7 +61,7 @@ int ConsoleUI::inputGuess(const Difficulty& diff) {
         if (const int* value = std::get_if<int>(&r)) {
             return *value;
         }
-        out_ << errorMessage(std::get<InputError>(r)) << "\n";
+        out_ << toMessage(std::get<InputError>(r)) << "\n";
     }
 }
 

@@ -1,3 +1,6 @@
 # CMakeとMakefileを言語統計から除外する
 *Makefile* linguist-detectable=false
 *Cmake* linguist-detectable=false
+
+# シェルスクリプトは Windows でチェックアウトしても LF のまま（CRLF だと bash が動かない）
+*.sh text eol=lf

@@ -1,0 +1,115 @@
+name: Release
+
+on:
+  # v で始まるタグを push したら、配布物を作って GitHub Release（下書き）に添付する
+  push:
+    tags: ['v*']
+  # 配布の仕組みを変更した PR では、公開せずに配布物の作成だけを試す
+  pull_request:
+    paths:
+      - '.github/workflows/release.yml'
+      - 'packaging/**'
+      - 'CMakePresets.json'
+
+# 既定は読み取りのみ。書き込みが必要なジョブだけ個別に権限を与える
+permissions:
+  contents: read
+
+jobs:
+  package-windows:
+    name: Package (Windows x64)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-ninja
+            mingw-w64-x86_64-qt6-base
+
+      - name: Configure
+        run: cmake --preset release
+
+      # バージョンの情報源は CMakeLists.txt の project(VERSION) だけにする。
+      # タグと食い違っていたら公開しない
+      - name: Check version
+        id: version
+        run: |
+          version=$(sed -n 's/^CMAKE_PROJECT_VERSION:STATIC=//p' build/release/CMakeCache.txt)
+          echo "Project version: ${version}"
+          if [[ "${GITHUB_REF_TYPE}" == "tag" && "${GITHUB_REF_NAME}" != "v${version}" ]]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match project version ${version}"
+            exit 1
+          fi
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build
+        run: cmake --build --preset release
+
+      # 配布するのと同じ Release ビルドでテストする
+      - name: Test
+        run: ctest --preset release
+
+      - name: Package
+        run: ./packaging/windows/package.sh build/release dist "${{ steps.version.outputs.version }}"
+
+      # MSYS2 の外（PATH に MSYS2 がない状態）で起動できるか確かめる
+      - name: Smoke test
+        shell: pwsh
+        timeout-minutes: 5
+        run: |
+          $dir = "dist/NumberGuessGame-v${{ steps.version.outputs.version }}-windows-x64"
+          foreach ($exe in @("NumberGuessGame.exe", "NumberGuessGameQt.exe")) {
+            $p = Start-Process -FilePath "$dir/$exe" -ArgumentList "--version" `
+                   -RedirectStandardOutput "$exe.out" -NoNewWindow -Wait -PassThru
+            $out = Get-Content "$exe.out" -Raw
+            Write-Host "${exe}: $out"
+            if ($p.ExitCode -ne 0) { throw "$exe exited with code $($p.ExitCode)" }
+            if ($out -notmatch "${{ steps.version.outputs.version }}") { throw "$exe printed an unexpected version" }
+          }
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: |
+            dist/*.zip
+            dist/*.zip.sha256
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release (draft)
+    needs: package-windows
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # Release の作成と配布物の添付に必要
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-package
+          path: dist
+
+      # 既に Release があれば配布物を差し替え、なければ下書きとして作る
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          if gh release view "${TAG}" --repo "${REPO}" > /dev/null 2>&1; then
+            gh release upload "${TAG}" dist/* --clobber --repo "${REPO}"
+          else
+            gh release create "${TAG}" dist/* --repo "${REPO}" \
+              --draft --verify-tag --generate-notes --title "${TAG}"
+          fi
