@@ -1,51 +1,19 @@
-# Domain (header-only, pure functions)
-add_library(domain INTERFACE)
+# 各レイヤーをライブラリとして定義する。
+# インクルードはすべて src/ を起点に書く（例: #include "app/ports/IRandom.h"）。
+add_subdirectory(domain)
+add_subdirectory(app)
+add_subdirectory(infra)
+add_subdirectory(ui)
 
-target_include_directories(domain
-    INTERFACE
-        ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-# Application
-add_library(app
-    app/GameController.cpp
-)
-
-target_link_libraries(app
-    PRIVATE domain
-)
-
-target_include_directories(app
-    PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-# Infrastructure
-add_library(infra
-    infra/RandomMT.cpp
-    infra/CsvScoreRepository.cpp
-)
-
-target_include_directories(infra
-    PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-# UI
-add_library(ui
-    ui/ConsoleUI.cpp
-)
-
-target_include_directories(ui
-    PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-# Executable
+# 実行ファイル（Composition Root: 具体クラスを組み立てる唯一の場所）
 add_executable(NumberGuessGame
     main.cpp
 )
 
 target_link_libraries(NumberGuessGame
-    PRIVATE app infra ui
+    PRIVATE
+        ngg::app
+        ngg::infra
+        ngg::ui
+        ngg::warnings
 )

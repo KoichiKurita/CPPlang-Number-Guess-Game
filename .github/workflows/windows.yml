@@ -24,7 +24,7 @@ jobs:
         shell: msys2 {0}
         run: |
           rm -rf build-ci
-          cmake -S . -B build-ci
+          cmake -S . -B build-ci -DNGG_WARNINGS_AS_ERRORS=ON
           cmake --build build-ci
 
       - name: Run tests
