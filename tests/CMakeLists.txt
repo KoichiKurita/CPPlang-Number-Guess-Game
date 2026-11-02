@@ -19,6 +19,10 @@ add_executable(GameTests
     GameControllerTest.cpp
     ConsoleUITest.cpp
     RandomMTTest.cpp
+    PlayerNameTest.cpp
+    HighScoreTest.cpp
+    CsvTest.cpp
+    CsvScoreRepositoryTest.cpp
 )
 
 target_link_libraries(GameTests
