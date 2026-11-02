@@ -1,6 +1,7 @@
 #pragma once
 
 #include "domain/Difficulty.h"
+#include "domain/StringUtil.h"
 
 #include <charconv>
 #include <optional>
@@ -18,24 +19,9 @@ enum class InputError {
 // 成功なら int、失敗なら InputError を持つ
 using ParseResult = std::variant<int, InputError>;
 
-namespace detail {
-
-// 前後の空白（スペース・タブ・改行）を取り除く
-inline std::string_view trim(std::string_view s) {
-    constexpr std::string_view ws = " \t\r\n";
-    const auto first = s.find_first_not_of(ws);
-    if (first == std::string_view::npos) {
-        return {};
-    }
-    const auto last = s.find_last_not_of(ws);
-    return s.substr(first, last - first + 1);
-}
-
-} // namespace detail
-
 // 文字列を [min, max] の範囲の整数に変換する純粋関数（I/O なし）
 inline ParseResult parseIntInRange(std::string_view text, int min, int max) {
-    const std::string_view s = detail::trim(text);
+    const std::string_view s = strutil::trim(text);
     if (s.empty()) {
         return InputError::Empty;
     }
