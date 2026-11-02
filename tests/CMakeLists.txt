@@ -18,16 +18,26 @@ add_executable(GameTests
     InputParserTest.cpp
     GameControllerTest.cpp
     ConsoleUITest.cpp
+    RandomMTTest.cpp
 )
 
 target_link_libraries(GameTests
     PRIVATE
         GTest::gtest_main
-        app
-        infra
-        ui
+        ngg::app
+        ngg::infra
+        ngg::ui
+        ngg::warnings
 )
 
 # テストケースを1件ずつ CTest に登録する（失敗したテスト名が CI ログに出る）
 include(GoogleTest)
 gtest_discover_tests(GameTests)
+
+# アーキテクチャテスト: レイヤー間の依存ルールと相対インクルードの禁止を検査する
+add_test(
+    NAME LayerDependencies
+    COMMAND ${CMAKE_COMMAND}
+        -DSRC_DIR=${PROJECT_SOURCE_DIR}/src
+        -P ${PROJECT_SOURCE_DIR}/cmake/CheckLayerDependencies.cmake
+)
