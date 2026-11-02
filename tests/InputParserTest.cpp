@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "../src/domain/InputParser.h"
+#include "domain/InputParser.h"
 
 #include <string>
 #include <variant>

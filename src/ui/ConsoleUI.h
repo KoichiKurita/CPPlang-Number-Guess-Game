@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IGameUI.h"
+#include "app/ports/IGameUI.h"
 
 #include <iosfwd>
 #include <string>

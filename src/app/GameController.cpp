@@ -1,4 +1,7 @@
-#include "GameController.h"
+#include "app/GameController.h"
+
+#include "domain/GameLogic.h"
+#include "domain/GameState.h"
 
 GameController::GameController(
     IRandom& random,

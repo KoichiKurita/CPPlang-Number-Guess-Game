@@ -1,5 +1,5 @@
 #pragma once
-#include "../src/infra/IRandom.h"
+#include "app/ports/IRandom.h"
 
 // 常に固定値を返す乱数。受け取った範囲を記録して、呼び出し側の検証に使う。
 class MockRandom : public IRandom {

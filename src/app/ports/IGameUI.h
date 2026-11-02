@@ -1,6 +1,6 @@
 #pragma once
-#include "../domain/Difficulty.h"
-#include "../domain/GameEvent.h"
+#include "domain/Difficulty.h"
+#include "domain/GameEvent.h"
 
 #include <stdexcept>
 

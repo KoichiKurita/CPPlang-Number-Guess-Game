@@ -1,4 +1,5 @@
 #include "app/GameController.h"
+#include "app/ports/IGameUI.h"
 #include "infra/RandomMT.h"
 #include "infra/CsvScoreRepository.h"
 #include "ui/ConsoleUI.h"

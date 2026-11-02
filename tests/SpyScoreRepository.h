@@ -1,5 +1,5 @@
 #pragma once
-#include "../src/infra/IScoreRepository.h"
+#include "app/ports/IScoreRepository.h"
 
 #include <string>
 #include <vector>
