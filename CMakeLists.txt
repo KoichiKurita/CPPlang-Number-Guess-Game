@@ -21,3 +21,10 @@ include(CTest)
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
+
+
+# Qt 版 GUI（Qt6 が必要なので既定では無効）
+option(NGG_BUILD_QT "Build the Qt GUI (requires Qt6)" OFF)
+if(NGG_BUILD_QT)
+    add_subdirectory(qt)
+endif()
