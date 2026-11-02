@@ -61,3 +61,40 @@ TEST_F(ConsoleUITest, HandleEventPrintsMessages) {
 
     EXPECT_EQ(output(), "Too small\nToo large\nCorrect! Attempts: 4\n");
 }
+
+// ---- プレイヤー名 ----
+TEST_F(ConsoleUITest, InputPlayerNameRetriesUntilValid) {
+    setInput("\n=1+1\n" + std::string(17, 'a') + "\nKo1\n");
+
+    EXPECT_EQ(ui_.inputPlayerName(), "Ko1");
+
+    const std::string out = output();
+    EXPECT_NE(out.find("Please enter a name."), std::string::npos);
+    EXPECT_NE(out.find("Name must start with a letter or digit."), std::string::npos);
+    EXPECT_NE(out.find("Name is too long."), std::string::npos);
+}
+
+TEST_F(ConsoleUITest, InputPlayerNameThrowsOnEof) {
+    setInput("");
+
+    EXPECT_THROW(ui_.inputPlayerName(), InputClosedError);
+}
+
+// ---- 結果表示 ----
+TEST_F(ConsoleUITest, ShowBestScoreForNewRecord) {
+    ui_.showBestScore(ScoreRecord{"Ko1", "Easy", 3}, true);
+
+    EXPECT_EQ(output(), "New record! Best for Easy: 3 attempts by Ko1\n");
+}
+
+TEST_F(ConsoleUITest, ShowBestScoreForExistingRecord) {
+    ui_.showBestScore(ScoreRecord{"Bob", "Hard", 5}, false);
+
+    EXPECT_EQ(output(), "Best for Hard: 5 attempts by Bob\n");
+}
+
+TEST_F(ConsoleUITest, ShowWarningPrefixesMessage) {
+    ui_.showWarning("disk full");
+
+    EXPECT_EQ(output(), "Warning: disk full\n");
+}
