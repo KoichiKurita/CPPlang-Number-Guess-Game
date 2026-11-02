@@ -62,3 +62,6 @@ ui_*
 
 # Game output
 scores.csv
+
+# Packaging output
+dist/
