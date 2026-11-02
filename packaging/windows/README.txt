@@ -20,6 +20,10 @@ Number Guess Game (Windows x64)
 ----------------
   NumberGuessGame.exe --version
 
+ライセンス
+----------
+  このソフトウェアは MIT License で公開しています（LICENSE.txt を参照）。
+
 第三者ソフトウェア
 ------------------
   このパッケージには、Qt 6（LGPL v3）および Qt が依存するライブラリの DLL を
