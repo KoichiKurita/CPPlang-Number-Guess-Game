@@ -1,5 +1,6 @@
 # Application: ゲーム進行の制御と、外部に求める機能のインターフェース（ports）。
 add_library(ngg_app
+    GameSession.cpp
     GameController.cpp
 )
 add_library(ngg::app ALIAS ngg_app)
