@@ -1,0 +1,79 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "dev",
+      "displayName": "Development (Ninja, Debug)",
+      "description": "Local development build. Warnings are reported but do not fail the build.",
+      "inherits": "base",
+      "generator": "Ninja"
+    },
+    {
+      "name": "ci",
+      "displayName": "CI (Ninja, Debug, warnings as errors)",
+      "inherits": "base",
+      "generator": "Ninja",
+      "cacheVariables": {
+        "NGG_WARNINGS_AS_ERRORS": "ON"
+      }
+    },
+    {
+      "name": "asan",
+      "displayName": "Sanitizers (Ninja, Debug, ASan + UBSan)",
+      "description": "GCC/Clang on Linux or macOS only.",
+      "inherits": "ci",
+      "cacheVariables": {
+        "NGG_ENABLE_SANITIZERS": "ON"
+      }
+    },
+    {
+      "name": "msvc",
+      "displayName": "MSVC (Visual Studio, warnings as errors)",
+      "description": "Uses the newest installed Visual Studio generator.",
+      "inherits": "base",
+      "cacheVariables": {
+        "NGG_WARNINGS_AS_ERRORS": "ON"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "dev",  "configurePreset": "dev" },
+    { "name": "ci",   "configurePreset": "ci" },
+    { "name": "asan", "configurePreset": "asan" },
+    { "name": "msvc", "configurePreset": "msvc", "configuration": "Debug" }
+  ],
+  "testPresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error" }
+    },
+    { "name": "dev",  "inherits": "base", "configurePreset": "dev" },
+    { "name": "ci",   "inherits": "base", "configurePreset": "ci" },
+    {
+      "name": "asan",
+      "inherits": "base",
+      "configurePreset": "asan",
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1",
+        "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
+      }
+    },
+    { "name": "msvc", "inherits": "base", "configurePreset": "msvc", "configuration": "Debug" }
+  ]
+}

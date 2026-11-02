@@ -12,6 +12,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)    # compile_commands.json を出力（エ
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 include(CompilerWarnings)
+include(Sanitizers)
 
 add_subdirectory(src)
 
