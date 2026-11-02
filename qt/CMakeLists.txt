@@ -31,8 +31,11 @@ target_link_libraries(NumberGuessGameQt
     PRIVATE
         ngg::gui
         ngg::infra
+        ngg::version
         ngg::warnings
 )
+
+install(TARGETS NumberGuessGameQt RUNTIME DESTINATION ${NGG_INSTALL_BINDIR})
 
 if(BUILD_TESTING)
     add_subdirectory(tests)
