@@ -65,3 +65,9 @@ scores.csv
 
 # Packaging output
 dist/
+
+# Coverage report
+coverage/
+
+# Editor / language server cache (clangd)
+.cache/
