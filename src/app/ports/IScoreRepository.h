@@ -22,5 +22,5 @@ public:
 
     // 全件を読み込む。保存先がまだなければ空を返す。
     // 読み込めない場合は ScoreRepositoryError を投げる。壊れた行は読み飛ばす。
-    virtual std::vector<ScoreRecord> loadAll() const = 0;
+    [[nodiscard]] virtual std::vector<ScoreRecord> loadAll() const = 0;
 };

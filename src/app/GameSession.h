@@ -38,9 +38,10 @@ public:
     // start() の前や、終了後に呼ぶと std::logic_error を投げる。
     GuessOutcome submitGuess(int value);
 
-    bool isPlaying() const;
-    const Difficulty& difficulty() const; // isPlaying() でなくても、最後に始めた難易度を返す
-    int attempts() const;
+    [[nodiscard]] bool isPlaying() const;
+    // isPlaying() でなくても、最後に始めた難易度を返す
+    [[nodiscard]] const Difficulty& difficulty() const;
+    [[nodiscard]] int attempts() const;
 
 private:
     ScoreReport recordScore(const ScoreRecord& record);

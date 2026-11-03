@@ -36,7 +36,10 @@ TEST(CsvTest, ParsesSimpleLine) {
 }
 
 TEST(CsvTest, ParsesEmptyFields) {
-    EXPECT_EQ(*csv::parseLine(",,"), (std::vector<std::string>{"", "", ""}));
+    const auto fields = csv::parseLine(",,");
+
+    ASSERT_TRUE(fields.has_value());
+    EXPECT_EQ(*fields, (std::vector<std::string>{"", "", ""}));
 }
 
 TEST(CsvTest, RejectsMalformedQuotes) {

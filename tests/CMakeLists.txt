@@ -25,6 +25,7 @@ add_executable(GameTests
     CsvTest.cpp
     CsvScoreRepositoryTest.cpp
 )
+ngg_enable_clang_tidy(GameTests)
 
 target_link_libraries(GameTests
     PRIVATE

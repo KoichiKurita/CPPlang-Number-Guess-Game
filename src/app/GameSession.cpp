@@ -15,7 +15,8 @@ void GameSession::start(std::string player, Difficulty diff) {
 }
 
 GuessOutcome GameSession::submitGuess(int value) {
-    if (!isPlaying()) {
+    // isPlaying() と同じ条件だが、state_ が値を持つことをこの場で確かめてから使う
+    if (!state_ || state_->finished) {
         throw std::logic_error("GameSession::submitGuess: no game in progress");
     }
 
@@ -68,7 +69,7 @@ ScoreReport GameSession::recordScore(const ScoreRecord& record) {
     // 3. 過去の記録を読めたときだけ、最高記録を返す
     if (loaded) {
         report.isNewRecord = isNewRecord(previousBest, record.attempts);
-        report.best = report.isNewRecord ? record : *previousBest;
+        report.best = report.isNewRecord ? std::optional<ScoreRecord>(record) : previousBest;
     }
     return report;
 }

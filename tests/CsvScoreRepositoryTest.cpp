@@ -37,7 +37,7 @@ protected:
 };
 
 TEST_F(CsvScoreRepositoryTest, LoadFromMissingFileReturnsEmpty) {
-    CsvScoreRepository repo(dir_ / "scores.csv");
+    const CsvScoreRepository repo(dir_ / "scores.csv");
 
     EXPECT_TRUE(repo.loadAll().empty());
 }
