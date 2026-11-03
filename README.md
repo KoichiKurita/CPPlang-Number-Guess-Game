@@ -178,6 +178,7 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 | Coverage (gcov, lcov) | Ubuntu 24.04 + Qt 6 | カバレッジを計測し、Codecov に送る（HTML レポートは Artifacts） |
 
 - テストが 0 件なら失敗にする（`noTestsAction: error`）
+- 外部の Action はすべてコミットハッシュで固定し、実行環境のイメージもバージョンを固定する（固定漏れは Lint ジョブで検出）
 - ワークフローの権限は `contents: read` のみ（最小権限）。リリースでは、署名（来歴証明）と公開のジョブにだけ、それぞれ必要な書き込み権限を与える
 - `main` / `develop` はルールセットで保護（PR 必須・全ジョブ成功必須・強制 push 禁止）
 
@@ -191,6 +192,7 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 | スコアファイルの改ざん・破損 | 壊れた行だけを読み飛ばして続行 |
 | 保存先に書き込めない・ディスクフル | `flush` 後のストリーム状態で検出し、警告を表示。ゲームは異常終了させない |
 | 未定義動作・メモリ破壊 | サニタイザ付きのテストを CI で常時実行 |
+| CI で使う外部 Action の改ざん | タグ（`@v4` など）ではなくコミットハッシュで固定し、書き換えられた Action が実行されないようにする |
 | 配布物の改ざん・なりすまし | SHA-256 チェックサムと、Sigstore で署名した来歴証明（SLSA build provenance）を付け、公開前に CI で検証する |
 
 ## ディレクトリ構成

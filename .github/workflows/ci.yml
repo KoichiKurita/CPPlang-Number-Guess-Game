@@ -17,12 +17,12 @@ concurrency:
 jobs:
   windows-mingw:
     name: Windows (MinGW GCC)
-    runs-on: windows-latest
+    runs-on: windows-2025
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Set up MSYS2
-        uses: msys2/setup-msys2@v2
+        uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2.33.0
         with:
           msystem: MINGW64
           update: true
@@ -46,9 +46,9 @@ jobs:
 
   windows-msvc:
     name: Windows (MSVC)
-    runs-on: windows-latest
+    runs-on: windows-2025
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Configure
         run: cmake --preset msvc
@@ -72,7 +72,7 @@ jobs:
       CC: ${{ matrix.compiler.cc }}
       CXX: ${{ matrix.compiler.cxx }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Install tools
         run: |
@@ -92,7 +92,7 @@ jobs:
     name: Linux (GCC, Qt GUI)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Install tools
         run: |
@@ -112,7 +112,7 @@ jobs:
     name: Lint (clang-format, clang-tidy)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       # ローカル（MSYS2 の LLVM 23）と同じ系列のバージョンに固定する
       - name: Install tools
@@ -127,6 +127,17 @@ jobs:
       - name: Check formatting
         run: git ls-files '*.cpp' '*.h' | xargs clang-format --dry-run --Werror
 
+      # すべての Action がコミットハッシュ（40 桁）で固定されていることを確認する
+      - name: Check actions are pinned
+        run: |
+          unpinned=$(grep -rnE '^[[:space:]]*-?[[:space:]]*uses:' .github/workflows \
+            | grep -vE '@[0-9a-f]{40}([[:space:]]|$)' || true)
+          if [[ -n "${unpinned}" ]]; then
+            echo "::error::Actions must be pinned to a full-length commit SHA"
+            echo "${unpinned}"
+            exit 1
+          fi
+
       - name: Configure
         run: cmake --preset tidy
 
@@ -139,7 +150,7 @@ jobs:
     name: Coverage (gcov, lcov)
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Install tools
         run: |
@@ -166,13 +177,13 @@ jobs:
           } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Upload HTML report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-html
           path: coverage/html
 
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage/coverage.info
