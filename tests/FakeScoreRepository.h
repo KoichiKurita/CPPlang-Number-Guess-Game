@@ -9,8 +9,7 @@
 class FakeScoreRepository : public IScoreRepository {
 public:
     FakeScoreRepository() = default;
-    explicit FakeScoreRepository(std::vector<ScoreRecord> initial)
-        : records_(std::move(initial)) {}
+    explicit FakeScoreRepository(std::vector<ScoreRecord> initial) : records_(std::move(initial)) {}
 
     void save(const ScoreRecord& record) override {
         if (failOnSave) {

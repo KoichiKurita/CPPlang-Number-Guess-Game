@@ -15,8 +15,7 @@ class GameWindowTest : public QObject {
     Q_OBJECT
 
 private:
-    template <typename T>
-    static T* find(GameWindow& w, const char* name) {
+    template <typename T> static T* find(GameWindow& w, const char* name) {
         auto* widget = w.findChild<T*>(QString::fromLatin1(name));
         if (widget == nullptr) {
             qFatal("widget not found: %s", name);
@@ -59,7 +58,7 @@ private slots:
         QTest::mouseClick(find<QPushButton>(w, "startButton"), Qt::LeftButton);
 
         auto* guess = find<QLineEdit>(w, "guessEdit");
-        QTest::keyClicks(guess, QStringLiteral("11"));   // Easy の範囲外
+        QTest::keyClicks(guess, QStringLiteral("11")); // Easy の範囲外
         QTest::keyClick(guess, Qt::Key_Return);
 
         QCOMPARE(find<QLabel>(w, "messageLabel")->text(), QStringLiteral("Out of range."));
@@ -72,7 +71,7 @@ private slots:
         GameSession session(random, repo);
         GameWindow w(session);
 
-        find<QComboBox>(w, "difficultyBox")->setCurrentIndex(0);  // Easy
+        find<QComboBox>(w, "difficultyBox")->setCurrentIndex(0); // Easy
         QTest::keyClicks(find<QLineEdit>(w, "nameEdit"), QStringLiteral("Ko1"));
         QTest::mouseClick(find<QPushButton>(w, "startButton"), Qt::LeftButton);
         QVERIFY(session.isPlaying());

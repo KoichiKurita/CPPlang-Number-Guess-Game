@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "domain/InputParser.h"
+#include <gtest/gtest.h>
 
 #include <string>
 #include <variant>
@@ -31,7 +31,7 @@ TEST(InputParserTest, AcceptsBoundaryValues) {
 
 TEST(InputParserTest, TrimsSurroundingWhitespace) {
     expectValue(parseIntInRange("  7\t", 1, 10), 7);
-    expectValue(parseIntInRange("7\r", 1, 10), 7);   // Windows の改行(CRLF)対策
+    expectValue(parseIntInRange("7\r", 1, 10), 7); // Windows の改行(CRLF)対策
 }
 
 // ---- 異常系 ----

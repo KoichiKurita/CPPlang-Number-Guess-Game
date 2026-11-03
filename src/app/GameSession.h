@@ -13,15 +13,15 @@
 
 // ゲーム終了時のスコア保存の結果
 struct ScoreReport {
-    std::optional<ScoreRecord> best;    // 表示する最高記録（過去の記録を読めなかった場合は空）
-    bool isNewRecord = false;           // 今回のスコアで記録を更新したか
-    std::vector<std::string> warnings;  // 保存・読み込みの失敗など、利用者に知らせる警告
+    std::optional<ScoreRecord> best;   // 表示する最高記録（過去の記録を読めなかった場合は空）
+    bool isNewRecord = false;          // 今回のスコアで記録を更新したか
+    std::vector<std::string> warnings; // 保存・読み込みの失敗など、利用者に知らせる警告
 };
 
 // 1回の予想の結果
 struct GuessOutcome {
-    GameEvent event;                    // TooSmall / TooLarge / Correct
-    std::optional<ScoreReport> report;  // 正解してゲームが終わったときだけ値を持つ
+    GameEvent event;                   // TooSmall / TooLarge / Correct
+    std::optional<ScoreReport> report; // 正解してゲームが終わったときだけ値を持つ
 };
 
 // 1ゲームを「1手ずつ」進めるアプリケーションサービス。
@@ -39,7 +39,7 @@ public:
     GuessOutcome submitGuess(int value);
 
     bool isPlaying() const;
-    const Difficulty& difficulty() const;  // isPlaying() でなくても、最後に始めた難易度を返す
+    const Difficulty& difficulty() const; // isPlaying() でなくても、最後に始めた難易度を返す
     int attempts() const;
 
 private:

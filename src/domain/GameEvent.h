@@ -3,6 +3,8 @@
 
 struct TooSmall {};
 struct TooLarge {};
-struct Correct { int attempts; };
+struct Correct {
+    int attempts;
+};
 
 using GameEvent = std::variant<TooSmall, TooLarge, Correct>;

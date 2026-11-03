@@ -1,8 +1,8 @@
-#include <gtest/gtest.h>
 #include "app/GameController.h"
 #include "FakeScoreRepository.h"
 #include "MockRandom.h"
 #include "MockUI.h"
+#include <gtest/gtest.h>
 
 #include <string>
 #include <variant>
@@ -46,7 +46,7 @@ TEST(GameControllerTest, GeneratesAnswerWithinSelectedDifficulty) {
 TEST(GameControllerTest, InputClosedMidGamePropagatesAndDoesNotSave) {
     MockRandom random(5);
     FakeScoreRepository repo;
-    MockUI ui(Difficulty::Easy(), std::queue<int>({1, 2}));  // 正解前に入力が尽きる
+    MockUI ui(Difficulty::Easy(), std::queue<int>({1, 2})); // 正解前に入力が尽きる
 
     GameController controller(random, repo, ui);
 
@@ -69,8 +69,8 @@ TEST(GameControllerTest, FirstPlayIsNewRecord) {
 
 TEST(GameControllerTest, ShowsPreviousBestWhenNotBeaten) {
     MockRandom random(5);
-    FakeScoreRepository repo({ {"Bob", "Easy", 2} });
-    MockUI ui(Difficulty::Easy(), std::queue<int>({1, 2, 5}));  // 3回で正解
+    FakeScoreRepository repo({{"Bob", "Easy", 2}});
+    MockUI ui(Difficulty::Easy(), std::queue<int>({1, 2, 5})); // 3回で正解
 
     GameController(random, repo, ui).run();
 
@@ -82,7 +82,7 @@ TEST(GameControllerTest, ShowsPreviousBestWhenNotBeaten) {
 
 TEST(GameControllerTest, BestScoreIsPerDifficulty) {
     MockRandom random(5);
-    FakeScoreRepository repo({ {"Bob", "Hard", 1} });   // 別の難易度の記録
+    FakeScoreRepository repo({{"Bob", "Hard", 1}}); // 別の難易度の記録
     MockUI ui(Difficulty::Easy(), std::queue<int>({1, 5}));
 
     GameController(random, repo, ui).run();
@@ -113,8 +113,8 @@ TEST(GameControllerTest, LoadFailureStillSavesButSkipsBestScore) {
 
     EXPECT_NO_THROW(GameController(random, repo, ui).run());
 
-    EXPECT_EQ(repo.records().size(), 1u);   // 保存はできている
+    EXPECT_EQ(repo.records().size(), 1u); // 保存はできている
     ASSERT_EQ(ui.warnings().size(), 1u);
     EXPECT_NE(ui.warnings()[0].find("Could not read past scores"), std::string::npos);
-    EXPECT_FALSE(ui.bestScoreShown().has_value());  // 比較できないので表示しない
+    EXPECT_FALSE(ui.bestScoreShown().has_value()); // 比較できないので表示しない
 }

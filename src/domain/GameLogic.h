@@ -1,26 +1,25 @@
 #pragma once
-#include "domain/GameState.h"
 #include "domain/GameEvent.h"
+#include "domain/GameState.h"
 #include <utility>
 
-inline std::pair<GameState, GameEvent>
-guess(const GameState& state, int value) {
+inline std::pair<GameState, GameEvent> guess(const GameState& state, int value) {
 
     if (state.finished) {
-        return { state, Correct{state.attempts} };
+        return {state, Correct{state.attempts}};
     }
 
     GameState next = state;
     next.attempts++;
 
     if (value < state.answer) {
-        return { next, TooSmall{} };
+        return {next, TooSmall{}};
     }
 
     if (value > state.answer) {
-        return { next, TooLarge{} };
+        return {next, TooLarge{}};
     }
 
     next.finished = true;
-    return { next, Correct{next.attempts} };
+    return {next, Correct{next.attempts}};
 }

@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "infra/RandomMT.h"
+#include <gtest/gtest.h>
 
 #include <stdexcept>
 

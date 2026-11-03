@@ -1,10 +1,10 @@
 #include "GameWindow.h"
 
+#include "Version.h"
 #include "app/GameSession.h"
 #include "infra/CsvScoreRepository.h"
 #include "infra/RandomMT.h"
 #include "infra/ScoreFilePath.h"
-#include "Version.h"
 
 #include <QApplication>
 #include <QMessageBox>
@@ -32,12 +32,11 @@ int main(int argc, char* argv[]) {
         GameSession session(random, repo);
 
         GameWindow window(session, QString::fromStdString(repo.file().string()));
-        window.setWindowTitle(QStringLiteral("%1 v%2")
-            .arg(QString::fromLatin1(kAppName), QString::fromLatin1(kAppVersion)));
+        window.setWindowTitle(QStringLiteral("%1 v%2").arg(QString::fromLatin1(kAppName),
+                                                           QString::fromLatin1(kAppVersion)));
         window.show();
         return app.exec();
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         QMessageBox::critical(nullptr, QStringLiteral("Fatal error"), QString::fromUtf8(e.what()));
         return EXIT_FAILURE;
     }

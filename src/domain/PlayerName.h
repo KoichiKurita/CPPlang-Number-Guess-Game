@@ -9,10 +9,10 @@
 
 // プレイヤー名の入力エラー
 enum class NameError {
-    Empty,             // 空・空白のみ
-    TooLong,           // 最大長を超えている
-    InvalidStart,      // 先頭が英数字ではない
-    InvalidCharacter   // 使えない文字を含む
+    Empty,           // 空・空白のみ
+    TooLong,         // 最大長を超えている
+    InvalidStart,    // 先頭が英数字ではない
+    InvalidCharacter // 使えない文字を含む
 };
 
 using NameResult = std::variant<std::string, NameError>;

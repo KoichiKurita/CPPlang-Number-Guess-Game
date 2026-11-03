@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "infra/Csv.h"
+#include <gtest/gtest.h>
 
 #include <string>
 #include <vector>

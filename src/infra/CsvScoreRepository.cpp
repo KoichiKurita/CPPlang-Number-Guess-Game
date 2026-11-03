@@ -30,13 +30,12 @@ std::optional<ScoreRecord> toRecord(const std::string& line) {
         return std::nullopt;
     }
 
-    return ScoreRecord{ std::get<std::string>(name), (*fields)[1], std::get<int>(attempts) };
+    return ScoreRecord{std::get<std::string>(name), (*fields)[1], std::get<int>(attempts)};
 }
 
 } // namespace
 
-CsvScoreRepository::CsvScoreRepository(std::filesystem::path file)
-    : file_(std::move(file)) {}
+CsvScoreRepository::CsvScoreRepository(std::filesystem::path file) : file_(std::move(file)) {}
 
 void CsvScoreRepository::save(const ScoreRecord& record) {
     namespace fs = std::filesystem;
@@ -46,8 +45,8 @@ void CsvScoreRepository::save(const ScoreRecord& record) {
     if (file_.has_parent_path()) {
         fs::create_directories(file_.parent_path(), ec);
         if (ec) {
-            throw ScoreRepositoryError("cannot create directory '"
-                + file_.parent_path().string() + "': " + ec.message());
+            throw ScoreRepositoryError("cannot create directory '" + file_.parent_path().string() +
+                                       "': " + ec.message());
         }
     }
 
@@ -61,7 +60,7 @@ void CsvScoreRepository::save(const ScoreRecord& record) {
     if (needsHeader) {
         out << kHeader << '\n';
     }
-    out << csv::formatLine({ record.player, record.difficulty, std::to_string(record.attempts) })
+    out << csv::formatLine({record.player, record.difficulty, std::to_string(record.attempts)})
         << '\n';
 
     // ディスクフルなどの書き込み失敗を検出する
@@ -76,7 +75,7 @@ std::vector<ScoreRecord> CsvScoreRepository::loadAll() const {
 
     std::error_code ec;
     if (!std::filesystem::exists(file_, ec)) {
-        return records;  // まだ一度も保存していない
+        return records; // まだ一度も保存していない
     }
 
     std::ifstream in(file_);
@@ -87,7 +86,7 @@ std::vector<ScoreRecord> CsvScoreRepository::loadAll() const {
     std::string line;
     while (std::getline(in, line)) {
         if (!line.empty() && line.back() == '\r') {
-            line.pop_back();  // Windows の改行（CRLF）で保存されたファイルにも対応
+            line.pop_back(); // Windows の改行（CRLF）で保存されたファイルにも対応
         }
         if (line.empty() || line == kHeader) {
             continue;

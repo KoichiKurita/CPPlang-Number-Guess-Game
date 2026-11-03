@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "infra/CsvScoreRepository.h"
+#include <gtest/gtest.h>
 
 #include <filesystem>
 #include <fstream>
@@ -80,15 +80,15 @@ TEST_F(CsvScoreRepositoryTest, CreatesMissingParentDirectories) {
 TEST_F(CsvScoreRepositoryTest, SkipsMalformedOrInvalidLines) {
     const auto file = dir_ / "scores.csv";
     writeFile(file,
-        "player,difficulty,attempts\n"
-        "Ko1,Easy,3\n"
-        "Easy,8\n"                    // 列が足りない（旧形式）
-        "Bob,Hard,abc\n"              // 回数が数字ではない
-        "Eve,Hard,0\n"                // 回数が範囲外
-        "'=cmd,Hard,1\n"              // 名前の検証に通らない
-        "\"broken,Easy,1\n"           // クォートが閉じていない
-        "\n"
-        "Carol,Normal,5\r\n");        // CRLF の行
+              "player,difficulty,attempts\n"
+              "Ko1,Easy,3\n"
+              "Easy,8\n"          // 列が足りない（旧形式）
+              "Bob,Hard,abc\n"    // 回数が数字ではない
+              "Eve,Hard,0\n"      // 回数が範囲外
+              "'=cmd,Hard,1\n"    // 名前の検証に通らない
+              "\"broken,Easy,1\n" // クォートが閉じていない
+              "\n"
+              "Carol,Normal,5\r\n"); // CRLF の行
 
     const auto records = CsvScoreRepository(file).loadAll();
 
