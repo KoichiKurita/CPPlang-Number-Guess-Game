@@ -110,7 +110,7 @@ jobs:
       - name: Install tools
         run: |
           python3 -m venv "${RUNNER_TEMP}/sbom-venv"
-          "${RUNNER_TEMP}/sbom-venv/bin/pip" install --quiet -r tools/sbom/requirements.txt
+          "${RUNNER_TEMP}/sbom-venv/bin/pip" install --quiet --require-hashes -r tools/sbom/requirements.txt
           echo "${RUNNER_TEMP}/sbom-venv/bin" >> "${GITHUB_PATH}"
 
       - name: Generate SBOM
