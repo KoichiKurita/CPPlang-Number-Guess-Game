@@ -87,9 +87,32 @@ jobs:
             dist/*.zip.sha256
           if-no-files-found: error
 
+    # 配布物に「このリポジトリの、このワークフローの、このコミットから作られた」ことを示す
+  # 署名付きの来歴証明（SLSA build provenance）を付ける。
+  # 署名に必要な権限は、ビルドとは別のこのジョブだけに与える
+  attest:
+    name: Attest build provenance
+    needs: package-windows
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write           # Sigstore の署名用証明書を得るための OIDC トークン
+      attestations: write       # 来歴証明をリポジトリに保存する
+      artifact-metadata: write  # 配布物の記録を保存する
+      contents: read
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-package
+          path: dist
+
+      - uses: actions/attest@v4
+        with:
+          subject-path: dist/*.zip
+
   publish:
     name: Publish GitHub Release (draft)
-    needs: package-windows
+    needs: attest
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     permissions:
@@ -99,6 +122,18 @@ jobs:
         with:
           name: windows-package
           path: dist
+
+      # 公開する前に、来歴証明とチェックサムを利用者と同じ方法で検証する
+      - name: Verify package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          cd dist
+          sha256sum --check ./*.zip.sha256
+          for zip in ./*.zip; do
+            gh attestation verify "${zip}" --repo "${REPO}"
+          done
 
       # 既に Release があれば配布物を差し替え、なければ下書きとして作る
       - name: Create or update release
