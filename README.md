@@ -1,6 +1,7 @@
 # Number Guess Game（C++）
 
 [![CI](https://github.com/KoichiKurita/CPPlang-Number-Guess-Game/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/KoichiKurita/CPPlang-Number-Guess-Game/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/KoichiKurita/CPPlang-Number-Guess-Game/badge)](https://scorecard.dev/viewer/?uri=github.com/KoichiKurita/CPPlang-Number-Guess-Game)
 ![C++17](https://img.shields.io/badge/C%2B%2B-17-blue)
 ![CMake](https://img.shields.io/badge/CMake-3.21%2B-informational)
 ![Qt](https://img.shields.io/badge/Qt-6-41cd52)
@@ -191,6 +192,8 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 - テストが 0 件なら失敗にする（`noTestsAction: error`）
 - 外部の Action はすべてコミットハッシュで固定し、実行環境のイメージもバージョンを固定する（固定漏れは Lint ジョブで検出）
 - 依存関係の更新：GitHub Actions と Lint のツール（clang-format / clang-tidy）は Dependabot が毎週提案する。Dependabot の対象外の googletest は、`check-googletest` ワークフローが毎週新しいリリースを確認し、Issue で知らせる
+- OpenSSF Scorecard で、リポジトリのセキュリティ対策を毎週採点する（結果は Security タブと README のバッジで確認できる）
+- CodeQL（`security-extended`）で、製品のコード（`src/`・`qt/`）を解析する。push・PR・毎週の定期実行で動き、結果は Security タブに表示する
 - ワークフローの権限は `contents: read` のみ（最小権限）。リリースでは、署名（来歴証明）と公開のジョブにだけ、それぞれ必要な書き込み権限を与える
 - `main` / `develop` はルールセットで保護（PR 必須・全ジョブ成功必須・強制 push 禁止）
 
@@ -204,10 +207,13 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 | スコアファイルの改ざん・破損 | 壊れた行だけを読み飛ばして続行 |
 | 保存先に書き込めない・ディスクフル | `flush` 後のストリーム状態で検出し、警告を表示。ゲームは異常終了させない |
 | 未定義動作・メモリ破壊 | サニタイザ付きのテストを CI で常時実行 |
+| 脆弱性につながるコードの混入 | CodeQL で、入力から危険な処理までのデータの流れを解析する。PR で新しい指摘が出れば、マージ前に気づける |
 | 配布物に含まれる部品の把握 | リリースごとに SBOM（SPDX 2.3）を作って形式を検証し、配布物との対応を署名付きで記録する。脆弱性が公表されたときに、影響の有無をすぐに確認できる |
 | 依存関係の古さ・脆弱性 | Dependabot と googletest の確認ワークフローで更新を検知する。公開から 7 日たったバージョンだけを取り込み（クールダウン）、乗っ取られた直後のバージョンを避ける |
 | CI で使う外部 Action の改ざん | タグ（`@v4` など）ではなくコミットハッシュで固定し、書き換えられた Action が実行されないようにする |
 | 配布物の改ざん・なりすまし | SHA-256 チェックサムと、Sigstore で署名した来歴証明（SLSA build provenance）を付け、公開前に CI で検証する |
+| セキュリティ対策の抜け漏れ | OpenSSF Scorecard で、外部の基準（依存関係の固定・最小権限・ブランチの保護など）に沿って毎週採点し、点数の低い項目を見直す |
+| 脆弱性の報告が公開されてしまう | [SECURITY.md](SECURITY.md) で報告の窓口（GitHub の非公開の脆弱性報告）と対応の流れを定め、修正前に悪用されることを防ぐ |
 
 ## ディレクトリ構成
 
