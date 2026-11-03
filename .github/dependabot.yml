@@ -1,0 +1,53 @@
+# Dependabot の設定 https://docs.github.com/code-security/dependabot
+# 更新の PR は develop に向けて作る（main へはリリース PR で取り込む）。
+# googletest（CMake の FetchContent）は Dependabot の対象外のため、
+# .github/workflows/check-googletest.yml で新しいリリースを確認する。
+version: 2
+updates:
+  # GitHub Actions（コミットハッシュと、バージョンのコメントをセットで更新する）
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Tokyo
+    # 公開から 7 日たったバージョンだけを提案する。
+    # 乗っ取られた Action が公開されても、発覚して取り下げられる前に取り込まないため
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      # アップロードとダウンロードは対で使うため、同時に更新する
+      artifact-actions:
+        patterns:
+          - actions/upload-artifact
+          - actions/download-artifact
+
+  # Lint で使う clang-format / clang-tidy（tools/lint/requirements.txt）
+  - package-ecosystem: pip
+    directory: /tools/lint
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Asia/Tokyo
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: ci
+      include: scope
+    ignore:
+      # ローカル（MSYS2）の LLVM とメジャーバージョンをそろえるため、メジャーの更新は手動で行う
+      - dependency-name: "clang-*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # clang-format と clang-tidy は同じ LLVM のリリースなので、同時に更新する
+      lint-tools:
+        patterns:
+          - clang-format
+          - clang-tidy
