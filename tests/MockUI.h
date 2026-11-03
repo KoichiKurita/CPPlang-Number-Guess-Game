@@ -23,7 +23,7 @@ public:
 
     Difficulty selectDifficulty() override { return diff_; }
 
-    int inputGuess(const Difficulty&) override {
+    int inputGuess(const Difficulty& /*diff*/) override {
         if (guesses_.empty()) {
             throw InputClosedError{};
         }

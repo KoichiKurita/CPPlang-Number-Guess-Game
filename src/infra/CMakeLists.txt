@@ -6,6 +6,7 @@ add_library(ngg_infra
     ScoreFilePath.cpp
 )
 add_library(ngg::infra ALIAS ngg_infra)
+ngg_enable_clang_tidy(ngg_infra)
 
 target_include_directories(ngg_infra
     PUBLIC

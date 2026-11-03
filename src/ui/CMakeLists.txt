@@ -3,6 +3,7 @@ add_library(ngg_ui
     ConsoleUI.cpp
 )
 add_library(ngg::ui ALIAS ngg_ui)
+ngg_enable_clang_tidy(ngg_ui)
 
 target_include_directories(ngg_ui
     PUBLIC

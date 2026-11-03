@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 #include <string>
+#include <string_view>
 #include <variant>
 
 namespace {
@@ -15,6 +16,13 @@ void expectValue(const ParseResult& r, int expected) {
 void expectError(const ParseResult& r, InputError expected) {
     ASSERT_TRUE(std::holds_alternative<InputError>(r));
     EXPECT_EQ(std::get<InputError>(r), expected);
+}
+
+// parseDifficulty が成功し、期待した難易度になることを確かめる
+void expectDifficulty(std::string_view input, const std::string& expectedName) {
+    const auto diff = parseDifficulty(input);
+    ASSERT_TRUE(diff.has_value()) << "input: " << input;
+    EXPECT_EQ(diff->name, expectedName);
 }
 
 } // namespace
@@ -65,9 +73,9 @@ TEST(InputParserTest, ParseGuessUsesDifficultyRange) {
 }
 
 TEST(InputParserTest, ParseDifficultyMapsMenuChoices) {
-    EXPECT_EQ(parseDifficulty("1")->name, "Easy");
-    EXPECT_EQ(parseDifficulty("2")->name, "Normal");
-    EXPECT_EQ(parseDifficulty("3")->name, "Hard");
+    expectDifficulty("1", "Easy");
+    expectDifficulty("2", "Normal");
+    expectDifficulty("3", "Hard");
 }
 
 TEST(InputParserTest, ParseDifficultyRejectsInvalidChoices) {

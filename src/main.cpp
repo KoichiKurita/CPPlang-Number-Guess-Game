@@ -17,7 +17,7 @@ namespace {
 constexpr const char* kUsage = "Usage: NumberGuessGame [--version | --help]\n";
 
 // コマンドライン引数を処理する。処理した場合は終了コードを返す（ゲームは始めない）。
-std::optional<int> handleArguments(int argc, char* argv[]) {
+std::optional<int> handleArguments(int argc, const char* const* argv) {
     if (argc <= 1) {
         return std::nullopt;
     }

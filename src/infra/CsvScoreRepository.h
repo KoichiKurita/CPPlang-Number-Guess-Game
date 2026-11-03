@@ -12,9 +12,9 @@ public:
     explicit CsvScoreRepository(std::filesystem::path file);
 
     void save(const ScoreRecord& record) override;
-    std::vector<ScoreRecord> loadAll() const override;
+    [[nodiscard]] std::vector<ScoreRecord> loadAll() const override;
 
-    const std::filesystem::path& file() const { return file_; }
+    [[nodiscard]] const std::filesystem::path& file() const { return file_; }
 
 private:
     std::filesystem::path file_;

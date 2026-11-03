@@ -28,7 +28,10 @@ TEST(HighScoreTest, TieKeepsEarlierRecord) {
         {"Second", "Easy", 3},
     };
 
-    EXPECT_EQ(bestScore(records, "Easy")->player, "First");
+    const auto best = bestScore(records, "Easy");
+
+    ASSERT_TRUE(best.has_value());
+    EXPECT_EQ(best->player, "First");
 }
 
 TEST(HighScoreTest, IsNewRecordOnlyWhenStrictlyBetter) {

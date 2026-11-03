@@ -10,18 +10,22 @@
 #include <QPushButton>
 #include <QtTest>
 
+namespace {
+
+// 画面の部品を objectName で探す。見つからなければテストを中断する
+template <typename T> T* find(GameWindow& w, const char* name) {
+    auto* widget = w.findChild<T*>(QString::fromLatin1(name));
+    if (widget == nullptr) {
+        qFatal("widget not found: %s", name);
+    }
+    return widget;
+}
+
+} // namespace
+
 // 画面を実際に操作して（文字入力・クリック・Enter）振る舞いを確かめる
 class GameWindowTest : public QObject {
     Q_OBJECT
-
-private:
-    template <typename T> static T* find(GameWindow& w, const char* name) {
-        auto* widget = w.findChild<T*>(QString::fromLatin1(name));
-        if (widget == nullptr) {
-            qFatal("widget not found: %s", name);
-        }
-        return widget;
-    }
 
 private slots:
     void guessIsDisabledBeforeStart() {

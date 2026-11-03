@@ -8,6 +8,7 @@ add_library(ngg_gui
     GameWindow.cpp
 )
 add_library(ngg::gui ALIAS ngg_gui)
+ngg_enable_clang_tidy(ngg_gui)
 
 target_include_directories(ngg_gui
     PUBLIC
@@ -26,6 +27,7 @@ target_link_libraries(ngg_gui
 add_executable(NumberGuessGameQt WIN32
     main.cpp
 )
+ngg_enable_clang_tidy(NumberGuessGameQt)
 
 target_link_libraries(NumberGuessGameQt
     PRIVATE

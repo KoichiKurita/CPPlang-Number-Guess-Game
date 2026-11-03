@@ -14,7 +14,7 @@ TEST(GameSessionTest, NotPlayingBeforeStart) {
     EXPECT_FALSE(session.isPlaying());
     EXPECT_EQ(session.attempts(), 0);
     EXPECT_THROW(session.submitGuess(5), std::logic_error);
-    EXPECT_THROW(session.difficulty(), std::logic_error);
+    EXPECT_THROW(static_cast<void>(session.difficulty()), std::logic_error);
 }
 
 TEST(GameSessionTest, StartGeneratesAnswerInDifficultyRange) {

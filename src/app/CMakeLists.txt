@@ -4,6 +4,7 @@ add_library(ngg_app
     GameController.cpp
 )
 add_library(ngg::app ALIAS ngg_app)
+ngg_enable_clang_tidy(ngg_app)
 
 target_include_directories(ngg_app
     PUBLIC

@@ -4,16 +4,17 @@
 #include "domain/StringUtil.h"
 
 #include <charconv>
+#include <cstdint>
 #include <optional>
 #include <string_view>
 #include <system_error>
 #include <variant>
 
 // 入力エラーの種類（UI側でメッセージを出し分けるために区別する）
-enum class InputError {
+enum class InputError : std::uint8_t {
     Empty,      // 空行・空白のみ
     NotANumber, // "abc" や "5abc" など、整数として解釈できない
-    OutOfRange  // 整数だが範囲外（int の桁あふれも含む）
+    OutOfRange, // 整数だが範囲外（int の桁あふれも含む）
 };
 
 // 成功なら int、失敗なら InputError を持つ
