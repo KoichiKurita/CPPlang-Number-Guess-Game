@@ -34,6 +34,7 @@ add_executable(GameTests
     CsvTest.cpp
     CsvScoreRepositoryTest.cpp
     ScoreFilePathTest.cpp
+    TimestampTest.cpp
 )
 ngg_enable_clang_tidy(GameTests)
 

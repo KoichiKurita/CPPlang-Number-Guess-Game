@@ -114,7 +114,7 @@ jobs:
       - name: Fuzz
         run: |
           mkdir -p crashes
-          for target in input_parser player_name csv; do
+          for target in input_parser player_name csv timestamp; do
             echo "::group::fuzz_${target}"
             mkdir -p "work/${target}"
             "build/fuzz/fuzz/fuzz_${target}" \
