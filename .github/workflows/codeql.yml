@@ -1,0 +1,57 @@
+name: CodeQL
+
+# GitHub の CodeQL で、C++ のコードをセキュリティの観点から解析する。
+# コンパイラの警告や clang-tidy が「書き方」を見るのに対し、CodeQL はコードをデータベースにして、
+# 入力から危険な処理までのデータの流れ（境界外アクセス・整数のあふれ・書式文字列など）を追跡する。
+# 結果は Security タブ（Code scanning）に表示され、PR では新しく増えた指摘だけが示される。
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+  schedule:
+    - cron: "30 1 * * 3"   # 毎週水曜 10:30（日本時間）。コードを変えていなくても、新しい検出ルールで解析し直す
+
+permissions:
+  contents: read
+
+# 同じブランチ/PR で新しい実行が始まったら、古い実行はキャンセルする
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (C++)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write   # 解析結果を Code scanning に送る
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build qt6-base-dev
+
+      # C++ はコンパイルの様子を記録してデータベースを作るため、ビルドより前に初期化する
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@1fc58d04a4d4374f921bdac573c3811c240f9c26 # v4.39.2
+        with:
+          languages: c-cpp
+          build-mode: manual
+          # 標準のルールに、セキュリティ関連の追加のルールを加える
+          queries: security-extended
+
+      # 解析の対象は製品のコード（src/ と qt/）。
+      # テストは外し（BUILD_TESTING=OFF）、googletest のコードまで解析しないようにする
+      - name: Build
+        run: |
+          cmake --preset qt -DBUILD_TESTING=OFF
+          cmake --build --preset qt
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@1fc58d04a4d4374f921bdac573c3811c240f9c26 # v4.39.2
+        with:
+          category: "/language:c-cpp"
