@@ -3,13 +3,16 @@ include(FetchContent)
 # googletest はタグではなくコミットハッシュで固定する（タグは後から付け替えられるため）。
 # 新しいリリースは .github/workflows/check-googletest.yml が毎週確認し、Issue で知らせる。
 # 更新するときは、次の 2 行をそろえて書き換える（バージョンとコミットの一致も同じワークフローで検証する）。
-set(NGG_GOOGLETEST_VERSION v1.14.0)
-set(NGG_GOOGLETEST_COMMIT f8d7d77c06936315286eb55f8de22cd23c188571)
+set(NGG_GOOGLETEST_VERSION v1.18.0)
+set(NGG_GOOGLETEST_COMMIT 063de7e9578f82b369302001269680b4b1553359)
 
 FetchContent_Declare(
     googletest
     URL https://github.com/google/googletest/archive/${NGG_GOOGLETEST_COMMIT}.zip
-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    # 解凍したファイルの更新日時を「解凍した時刻」にする。
+    # zip の中の古い日時のままだと、版を上げてもヘッダーが新しくなったと判断されず、
+    # テストが古いヘッダーのまま再コンパイルされない
+    DOWNLOAD_EXTRACT_TIMESTAMP FALSE
 )
 
 # MSVC でランタイム設定の不一致によるリンクエラーを防ぐ（MinGW では影響なし）
