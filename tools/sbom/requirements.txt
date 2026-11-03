@@ -1,0 +1,2 @@
+# SBOM（SPDX）の形式を検証するツール。更新は Dependabot が提案する
+spdx-tools==0.8.5
