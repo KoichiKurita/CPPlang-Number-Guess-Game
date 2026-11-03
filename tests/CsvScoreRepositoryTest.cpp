@@ -106,3 +106,10 @@ TEST_F(CsvScoreRepositoryTest, SaveFailureThrowsScoreRepositoryError) {
 
     EXPECT_THROW(repo.save({"Ko1", "Easy", 3}), ScoreRepositoryError);
 }
+
+TEST_F(CsvScoreRepositoryTest, ExposesConfiguredFilePath) {
+    const auto file = dir_ / "nested" / "scores.csv";
+    const CsvScoreRepository repo(file);
+
+    EXPECT_EQ(repo.file(), file);
+}
