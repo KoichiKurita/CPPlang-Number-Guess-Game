@@ -38,6 +38,24 @@
 | Windows | `%APPDATA%\NumberGuessGame\scores.csv` |
 | Linux / macOS | `$XDG_DATA_HOME/NumberGuessGame/scores.csv`（未設定なら `~/.local/share/...`） |
 
+## ダウンロード（Windows）
+
+[Releases](https://github.com/KoichiKurita/CPPlang-Number-Guess-Game/releases/latest) から `NumberGuessGame-v<バージョン>-windows-x64.zip` をダウンロードし、展開したフォルダの `NumberGuessGameQt.exe`（GUI 版）または `NumberGuessGame.exe`（Console 版）を起動します。インストールは不要です。
+
+### 配布物の検証
+
+配布物は GitHub Actions だけで作られ、改ざんされていないことを次の 2 つの方法で確かめられます。
+
+```powershell
+# 1. チェックサム（.zip.sha256 に書かれた値と一致すること）
+Get-FileHash .\NumberGuessGame-v<バージョン>-windows-x64.zip -Algorithm SHA256
+
+# 2. 来歴証明（このリポジトリの CI で、どのコミットから作られたかを Sigstore の署名で確認する）
+gh attestation verify .\NumberGuessGame-v<バージョン>-windows-x64.zip --repo KoichiKurita/CPPlang-Number-Guess-Game
+```
+
+来歴証明の一覧は、リポジトリの [Attestations](https://github.com/KoichiKurita/CPPlang-Number-Guess-Game/attestations) でも確認できます。
+
 ## ビルドと実行
 
 ### 必要なもの
@@ -160,7 +178,7 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 | Coverage (gcov, lcov) | Ubuntu 24.04 + Qt 6 | カバレッジを計測し、Codecov に送る（HTML レポートは Artifacts） |
 
 - テストが 0 件なら失敗にする（`noTestsAction: error`）
-- ワークフローの権限は `contents: read` のみ（最小権限）
+- ワークフローの権限は `contents: read` のみ（最小権限）。リリースでは、署名（来歴証明）と公開のジョブにだけ、それぞれ必要な書き込み権限を与える
 - `main` / `develop` はルールセットで保護（PR 必須・全ジョブ成功必須・強制 push 禁止）
 
 ## セキュリティと信頼性
@@ -173,6 +191,7 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 | スコアファイルの改ざん・破損 | 壊れた行だけを読み飛ばして続行 |
 | 保存先に書き込めない・ディスクフル | `flush` 後のストリーム状態で検出し、警告を表示。ゲームは異常終了させない |
 | 未定義動作・メモリ破壊 | サニタイザ付きのテストを CI で常時実行 |
+| 配布物の改ざん・なりすまし | SHA-256 チェックサムと、Sigstore で署名した来歴証明（SLSA build provenance）を付け、公開前に CI で検証する |
 
 ## ディレクトリ構成
 
