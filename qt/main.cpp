@@ -5,6 +5,7 @@
 #include "infra/CsvScoreRepository.h"
 #include "infra/RandomMT.h"
 #include "infra/ScoreFilePath.h"
+#include "infra/SystemClock.h"
 
 #include <QApplication>
 #include <QMessageBox>
@@ -29,7 +30,8 @@ int main(int argc, char** argv) {
     try {
         RandomMT random;
         CsvScoreRepository repo(defaultScoreFilePath());
-        GameSession session(random, repo);
+        SystemClock clock;
+        GameSession session(random, repo, clock);
 
         GameWindow window(session, QString::fromStdString(repo.file().string()));
         window.setWindowTitle(QStringLiteral("%1 v%2").arg(QString::fromLatin1(kAppName),

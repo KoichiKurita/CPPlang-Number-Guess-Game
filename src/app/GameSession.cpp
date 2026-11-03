@@ -6,7 +6,8 @@
 #include <stdexcept>
 #include <utility>
 
-GameSession::GameSession(IRandom& random, IScoreRepository& repo) : random_(random), repo_(repo) {}
+GameSession::GameSession(IRandom& random, IScoreRepository& repo, IClock& clock)
+    : random_(random), repo_(repo), clock_(clock) {}
 
 void GameSession::start(std::string player, Difficulty diff) {
     const int answer = random_.generate(diff.min, diff.max);
@@ -25,7 +26,8 @@ GuessOutcome GameSession::submitGuess(int value) {
 
     GuessOutcome outcome{event, std::nullopt};
     if (state_->finished) {
-        outcome.report = recordScore(ScoreRecord{player_, state_->diff.name, state_->attempts});
+        outcome.report = recordScore(
+            ScoreRecord{player_, state_->diff.name, state_->attempts, clock_.nowUnixSeconds()});
     }
     return outcome;
 }

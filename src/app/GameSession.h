@@ -1,5 +1,6 @@
 #pragma once
 
+#include "app/ports/IClock.h"
 #include "app/ports/IRandom.h"
 #include "app/ports/IScoreRepository.h"
 #include "domain/Difficulty.h"
@@ -29,7 +30,7 @@ struct GuessOutcome {
 // Console 版（GameController）と Qt 版の両方から同じルールで使える。
 class GameSession {
 public:
-    GameSession(IRandom& random, IScoreRepository& repo);
+    GameSession(IRandom& random, IScoreRepository& repo, IClock& clock);
 
     // 新しいゲームを始める（答えを決める）。前のゲームの状態は破棄する。
     void start(std::string player, Difficulty diff);
@@ -48,6 +49,7 @@ private:
 
     IRandom& random_;
     IScoreRepository& repo_;
+    IClock& clock_;
     std::string player_;
     std::optional<GameState> state_;
 };

@@ -1,6 +1,7 @@
 # Infrastructure: app のポートの実装（乱数・永続化）。
 add_library(ngg_infra
     RandomMT.cpp
+    SystemClock.cpp
     Csv.cpp
     CsvScoreRepository.cpp
     ScoreFilePath.cpp
