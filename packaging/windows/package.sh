@@ -10,6 +10,7 @@
 #   3. 依存している DLL を objdump で調べ、MSYS2 から再帰的に同梱する
 #      （MSYS2 の windeployqt は Qt 以外の DLL を集めないため）
 #   4. ライセンス文書を同梱し、zip と SHA-256 チェックサムを作る
+#   5. 同梱した MSYS2 パッケージの一覧（SBOM の材料）を <出力フォルダ>/<名前>.packages.tsv に書き出す
 set -euo pipefail
 
 if [[ $# -ne 3 ]]; then
@@ -38,7 +39,8 @@ fi
 
 # ---- 1. 実行ファイル -------------------------------------------------------
 echo "==> Staging ${stage}"
-rm -rf "${stage}" "${out_dir}/${name}.zip" "${out_dir}/${name}.zip.sha256"
+packages_tsv="${out_dir}/${name}.packages.tsv"
+rm -rf "${stage}" "${out_dir}/${name}.zip" "${out_dir}/${name}.zip.sha256" "${packages_tsv}"
 mkdir -p "${stage}"
 cmake --install "${build_dir}" --prefix "${stage}"
 
@@ -107,13 +109,21 @@ mapfile -t packages < <(
         fi
     done | sort -u
 )
+# pacman -Qi の出力（$info）から、指定した項目の値を取り出す
+field() { sed -n "s/^$1 *: //p" <<< "${info}" | head -n 1; }
+
+printf 'name\tversion\tlicenses\turl\n' > "${packages_tsv}"
 for pkg in "${packages[@]}"; do
     license_dir="${MINGW_PREFIX}/share/licenses/${pkg#"${MINGW_PACKAGE_PREFIX}-"}"
     if [[ -d ${license_dir} ]]; then
         cp -r "${license_dir}" "${stage}/licenses/"
     fi
-    pacman -Qi "${pkg}" | sed -n 's/^\(Name\|Version\|Licenses\|URL\) *: /\1: /p' >> "${stage}/licenses/PACKAGES.txt"
-    echo >> "${stage}/licenses/PACKAGES.txt"
+    # 日本語環境でも項目名が英語になるよう、ロケールを C にして読む
+    info=$(LC_ALL=C pacman -Qi "${pkg}")
+    printf 'Name: %s\nVersion: %s\nLicenses: %s\nURL: %s\n\n' \
+        "$(field Name)" "$(field Version)" "$(field Licenses)" "$(field URL)" >> "${stage}/licenses/PACKAGES.txt"
+    printf '%s\t%s\t%s\t%s\n' \
+        "$(field Name)" "$(field Version)" "$(field Licenses)" "$(field URL)" >> "${packages_tsv}"
 done
 
 cp "${script_dir}/README.txt" "${stage}/README.txt"
