@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "domain/PlayerName.h"
+#include <gtest/gtest.h>
 
 #include <string>
 #include <variant>
@@ -31,8 +31,7 @@ TEST(PlayerNameTest, TrimsSurroundingWhitespace) {
 TEST(PlayerNameTest, AcceptsMaxLengthAndRejectsLonger) {
     expectName(parsePlayerName(std::string(kMaxPlayerNameLength, 'a')),
                std::string(kMaxPlayerNameLength, 'a'));
-    expectError(parsePlayerName(std::string(kMaxPlayerNameLength + 1, 'a')),
-                NameError::TooLong);
+    expectError(parsePlayerName(std::string(kMaxPlayerNameLength + 1, 'a')), NameError::TooLong);
 }
 
 TEST(PlayerNameTest, RejectsEmpty) {
@@ -49,9 +48,9 @@ TEST(PlayerNameTest, RejectsFormulaInjectionPrefixes) {
 }
 
 TEST(PlayerNameTest, RejectsCharactersOutsideAllowList) {
-    expectError(parsePlayerName("a,b"), NameError::InvalidCharacter);       // CSV の区切り
-    expectError(parsePlayerName("a\"b"), NameError::InvalidCharacter);      // CSV のクォート
+    expectError(parsePlayerName("a,b"), NameError::InvalidCharacter);  // CSV の区切り
+    expectError(parsePlayerName("a\"b"), NameError::InvalidCharacter); // CSV のクォート
     expectError(parsePlayerName("a\tb"), NameError::InvalidCharacter);
     expectError(parsePlayerName("a;b"), NameError::InvalidCharacter);
-    expectError(parsePlayerName("\xE3\x81\x82"), NameError::InvalidStart);  // 非 ASCII（「あ」）
+    expectError(parsePlayerName("\xE3\x81\x82"), NameError::InvalidStart); // 非 ASCII（「あ」）
 }

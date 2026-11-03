@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "infra/CsvScoreRepository.h"
+#include <gtest/gtest.h>
 
 #include <filesystem>
 #include <fstream>
@@ -37,7 +37,7 @@ protected:
 };
 
 TEST_F(CsvScoreRepositoryTest, LoadFromMissingFileReturnsEmpty) {
-    CsvScoreRepository repo(dir_ / "scores.csv");
+    const CsvScoreRepository repo(dir_ / "scores.csv");
 
     EXPECT_TRUE(repo.loadAll().empty());
 }
@@ -80,15 +80,15 @@ TEST_F(CsvScoreRepositoryTest, CreatesMissingParentDirectories) {
 TEST_F(CsvScoreRepositoryTest, SkipsMalformedOrInvalidLines) {
     const auto file = dir_ / "scores.csv";
     writeFile(file,
-        "player,difficulty,attempts\n"
-        "Ko1,Easy,3\n"
-        "Easy,8\n"                    // 列が足りない（旧形式）
-        "Bob,Hard,abc\n"              // 回数が数字ではない
-        "Eve,Hard,0\n"                // 回数が範囲外
-        "'=cmd,Hard,1\n"              // 名前の検証に通らない
-        "\"broken,Easy,1\n"           // クォートが閉じていない
-        "\n"
-        "Carol,Normal,5\r\n");        // CRLF の行
+              "player,difficulty,attempts\n"
+              "Ko1,Easy,3\n"
+              "Easy,8\n"          // 列が足りない（旧形式）
+              "Bob,Hard,abc\n"    // 回数が数字ではない
+              "Eve,Hard,0\n"      // 回数が範囲外
+              "'=cmd,Hard,1\n"    // 名前の検証に通らない
+              "\"broken,Easy,1\n" // クォートが閉じていない
+              "\n"
+              "Carol,Normal,5\r\n"); // CRLF の行
 
     const auto records = CsvScoreRepository(file).loadAll();
 
@@ -105,4 +105,11 @@ TEST_F(CsvScoreRepositoryTest, SaveFailureThrowsScoreRepositoryError) {
     CsvScoreRepository repo(file);
 
     EXPECT_THROW(repo.save({"Ko1", "Easy", 3}), ScoreRepositoryError);
+}
+
+TEST_F(CsvScoreRepositoryTest, ExposesConfiguredFilePath) {
+    const auto file = dir_ / "nested" / "scores.csv";
+    const CsvScoreRepository repo(file);
+
+    EXPECT_EQ(repo.file(), file);
 }

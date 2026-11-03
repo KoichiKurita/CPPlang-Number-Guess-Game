@@ -1,0 +1,38 @@
+# 静的解析（clang-tidy 23 で確認）
+# 有効にするチェックの方針:
+#   バグの可能性（bugprone / clang-analyzer）、性能（performance）、移植性（portability）、
+#   現代的な書き方（modernize）、読みやすさ（readability）を広く有効にし、
+#   このプロジェクトの書き方と合わないものだけを理由付きで無効にする。
+#
+# 無効にしたチェックと理由:
+#   bugprone-easily-swappable-parameters : (int min, int max) のように同じ型が並ぶ引数は自然で、誤検知が多い
+#   misc-include-cleaner                 : 間接的なインクルードまで細かく指摘し、ノイズが多い
+#   misc-non-private-member-variables-in-classes : ScoreRecord などは公開メンバの値型として設計している
+#   modernize-return-braced-init-list    : return fs::path(...) のように型名を書くほうが読みやすい
+#   modernize-use-trailing-return-type   : 後置の戻り値型（auto f() -> int）は使わない方針
+#   portability-avoid-pragma-once        : 対象のコンパイラ（GCC / Clang / MSVC）はすべて #pragma once に対応
+#   readability-identifier-length        : ラムダの e や結果の r など、短いスコープでの短い名前を許可する
+#   readability-magic-numbers            : 難易度の範囲など、その場で意味が明らかな数値が多い
+Checks: >
+  -*,
+  bugprone-*,
+  clang-analyzer-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -bugprone-easily-swappable-parameters,
+  -misc-include-cleaner,
+  -misc-non-private-member-variables-in-classes,
+  -modernize-return-braced-init-list,
+  -modernize-use-trailing-return-type,
+  -portability-avoid-pragma-once,
+  -readability-identifier-length,
+  -readability-magic-numbers
+
+WarningsAsErrors: '*'
+HeaderFilterRegex: '.*/(src|qt|tests)/.*'
+# ビルドフォルダ内の自動生成ファイル（Qt の moc など）は対象外
+ExcludeHeaderFilterRegex: '.*/build/.*'
+FormatStyle: file

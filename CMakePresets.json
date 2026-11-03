@@ -45,6 +45,24 @@
       }
     },
     {
+      "name": "coverage",
+      "displayName": "Coverage (Ninja, Debug, Qt GUI, gcov)",
+      "description": "Instrumented build for code coverage. GCC/Clang only. Requires Qt6.",
+      "inherits": "qt",
+      "cacheVariables": {
+        "NGG_ENABLE_COVERAGE": "ON"
+      }
+    },
+    {
+      "name": "tidy",
+      "displayName": "clang-tidy (Ninja, Debug, Qt GUI, static analysis)",
+      "description": "Runs clang-tidy on project sources while compiling. Requires clang-tidy and Qt6.",
+      "inherits": "qt",
+      "cacheVariables": {
+        "NGG_ENABLE_CLANG_TIDY": "ON"
+      }
+    },
+    {
       "name": "release",
       "displayName": "Release (Ninja, Release, Qt GUI, warnings as errors)",
       "description": "Optimized build used for distribution packages. Requires Qt6.",
@@ -73,6 +91,8 @@
     { "name": "ci",   "configurePreset": "ci" },
     { "name": "asan", "configurePreset": "asan" },
     { "name": "qt",   "configurePreset": "qt" },
+    { "name": "coverage", "configurePreset": "coverage" },
+    { "name": "tidy", "configurePreset": "tidy" },
     { "name": "release", "configurePreset": "release" },
     { "name": "msvc", "configurePreset": "msvc", "configuration": "Debug" }
   ],
@@ -86,6 +106,7 @@
     { "name": "dev",  "inherits": "base", "configurePreset": "dev" },
     { "name": "ci",   "inherits": "base", "configurePreset": "ci" },
     { "name": "qt",   "inherits": "base", "configurePreset": "qt" },
+    { "name": "coverage", "inherits": "base", "configurePreset": "coverage" },
     { "name": "release", "inherits": "base", "configurePreset": "release" },
     {
       "name": "asan",

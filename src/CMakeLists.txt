@@ -9,6 +9,7 @@ add_subdirectory(ui)
 add_executable(NumberGuessGame
     main.cpp
 )
+ngg_enable_clang_tidy(NumberGuessGame)
 
 target_link_libraries(NumberGuessGame
     PRIVATE

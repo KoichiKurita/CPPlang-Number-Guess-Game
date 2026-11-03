@@ -20,6 +20,17 @@ Number Guess Game (Windows x64)
 ----------------
   NumberGuessGame.exe --version
 
+配布物の検証
+------------
+  この zip は GitHub Actions で作成し、作成元を証明する署名（来歴証明）を付けています。
+  GitHub CLI（gh）があれば、次のコマンドで改ざんされていないことを確認できます。
+
+    gh attestation verify NumberGuessGame-v<バージョン>-windows-x64.zip --repo KoichiKurita/CPPlang-Number-Guess-Game
+
+ライセンス
+----------
+  このソフトウェアは MIT License で公開しています（LICENSE.txt を参照）。
+
 第三者ソフトウェア
 ------------------
   このパッケージには、Qt 6（LGPL v3）および Qt が依存するライブラリの DLL を

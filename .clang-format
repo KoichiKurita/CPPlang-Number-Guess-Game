@@ -1,0 +1,25 @@
+# コードの書式（clang-format 23 で確認）
+# 書式の確認: clang-format --dry-run --Werror <files>
+# 書式の適用: clang-format -i <files>
+BasedOnStyle: LLVM
+Language: Cpp
+Standard: c++17
+
+IndentWidth: 4
+ColumnLimit: 100
+AccessModifierOffset: -4
+PointerAlignment: Left
+
+AllowShortFunctionsOnASingleLine: Inline
+IndentCaseLabels: true
+AllowShortCaseLabelsOnASingleLine: true
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+
+# インクルードはグループ（空行で区切ったまとまり）を保ったまま、グループ内だけ並べ替える
+IncludeBlocks: Preserve
+SortIncludes: CaseSensitive
+
+FixNamespaceComments: true
+# 日本語のコメントは単語の区切りがなく、自動で折り返すと読みにくくなるため、折り返さない
+ReflowComments: false

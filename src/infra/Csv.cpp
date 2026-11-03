@@ -40,7 +40,7 @@ std::string escapeField(std::string_view field) {
     std::string quoted = "\"";
     for (const char c : value) {
         if (c == '"') {
-            quoted += '"';   // " は "" にする
+            quoted += '"'; // " は "" にする
         }
         quoted += c;
     }
@@ -70,7 +70,7 @@ std::optional<std::vector<std::string>> parseLine(std::string_view line) {
         if (inQuotes) {
             if (c == '"') {
                 if (i + 1 < line.size() && line[i + 1] == '"') {
-                    current += '"';   // "" は " 1文字
+                    current += '"'; // "" は " 1文字
                     ++i;
                 } else {
                     inQuotes = false; // クォートの終わり
@@ -80,7 +80,7 @@ std::optional<std::vector<std::string>> parseLine(std::string_view line) {
             }
         } else if (c == '"') {
             if (!current.empty()) {
-                return std::nullopt;  // フィールドの途中に " がある
+                return std::nullopt; // フィールドの途中に " がある
             }
             inQuotes = true;
         } else if (c == ',') {
@@ -92,7 +92,7 @@ std::optional<std::vector<std::string>> parseLine(std::string_view line) {
     }
 
     if (inQuotes) {
-        return std::nullopt;  // クォートが閉じていない
+        return std::nullopt; // クォートが閉じていない
     }
     fields.push_back(unescapeFormula(std::move(current)));
     return fields;

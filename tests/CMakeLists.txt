@@ -24,7 +24,14 @@ add_executable(GameTests
     HighScoreTest.cpp
     CsvTest.cpp
     CsvScoreRepositoryTest.cpp
+    ScoreFilePathTest.cpp
 )
+ngg_enable_clang_tidy(GameTests)
+
+# MSVC では std::getenv が非推奨の警告（C4996）になるため、テストでは抑止する
+if(MSVC)
+    target_compile_definitions(GameTests PRIVATE _CRT_SECURE_NO_WARNINGS)
+endif()
 
 target_link_libraries(GameTests
     PRIVATE

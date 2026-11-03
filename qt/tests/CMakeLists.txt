@@ -3,6 +3,7 @@ find_package(Qt6 6.2 REQUIRED COMPONENTS Test)
 add_executable(GameWindowTest
     GameWindowTest.cpp
 )
+ngg_enable_clang_tidy(GameWindowTest)
 
 target_include_directories(GameWindowTest
     PRIVATE

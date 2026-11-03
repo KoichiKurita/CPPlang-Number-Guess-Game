@@ -1,0 +1,11 @@
+# テストコード用の設定（親の .clang-tidy を引き継ぎ、テストに合わないチェックだけ無効にする）
+#   modernize-use-nodiscard               : テストダブルの確認用メソッドにまで付けると冗長
+#   readability-uppercase-literal-suffix  : EXPECT_EQ(size, 1u) のような書き方はテストで慣用的
+#   readability-convert-member-functions-to-static : テストのフィクスチャや Qt Test のスロットは static にできない
+#   misc-use-internal-linkage             : TEST_F のフィクスチャは googletest の書き方に従う
+InheritParentConfig: true
+Checks: >
+  -modernize-use-nodiscard,
+  -readability-uppercase-literal-suffix,
+  -readability-convert-member-functions-to-static,
+  -misc-use-internal-linkage

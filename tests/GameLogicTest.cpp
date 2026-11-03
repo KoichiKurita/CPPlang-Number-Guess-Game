@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "domain/GameLogic.h"
+#include <gtest/gtest.h>
 
 #include <variant>
 
@@ -40,7 +40,7 @@ TEST(GameLogicTest, DoesNotMutateInputState) {
     const GameState before = newGame(5);
     guess(before, 3);
 
-    EXPECT_EQ(before.attempts, 0);   // 純粋関数: 引数は変更されない
+    EXPECT_EQ(before.attempts, 0); // 純粋関数: 引数は変更されない
     EXPECT_FALSE(before.finished);
 }
 

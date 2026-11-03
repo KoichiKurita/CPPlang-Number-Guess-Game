@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "ui/ConsoleUI.h"
+#include <gtest/gtest.h>
 
 #include <sstream>
 #include <string>
@@ -42,7 +42,7 @@ TEST_F(ConsoleUITest, InputGuessShowsRangeInPrompt) {
 
 // 修正前は無限ループしていたケースの回帰テスト
 TEST_F(ConsoleUITest, ThrowsInputClosedOnEof) {
-    setInput("abc\n");   // 不正入力の後に EOF
+    setInput("abc\n"); // 不正入力の後に EOF
 
     EXPECT_THROW(ui_.inputGuess(Difficulty::Easy()), InputClosedError);
 }

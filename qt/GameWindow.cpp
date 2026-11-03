@@ -23,24 +23,25 @@ namespace {
 constexpr int kMaxGuessLength = 10;
 
 QString describe(const GameEvent& event) {
-    return std::visit([](auto&& e) -> QString {
-        using T = std::decay_t<decltype(e)>;
-        if constexpr (std::is_same_v<T, TooSmall>) {
-            return QStringLiteral("Too small");
-        } else if constexpr (std::is_same_v<T, TooLarge>) {
-            return QStringLiteral("Too large");
-        } else {
-            return QStringLiteral("Correct! Attempts: %1").arg(e.attempts);
-        }
-    }, event);
+    return std::visit(
+        [](auto&& e) -> QString {
+            using T = std::decay_t<decltype(e)>;
+            if constexpr (std::is_same_v<T, TooSmall>) {
+                return QStringLiteral("Too small");
+            } else if constexpr (std::is_same_v<T, TooLarge>) {
+                return QStringLiteral("Too large");
+            } else {
+                return QStringLiteral("Correct! Attempts: %1").arg(e.attempts);
+            }
+        },
+        event);
 }
 
 } // namespace
 
 GameWindow::GameWindow(GameSession& session, const QString& scoreFileText, QWidget* parent)
-    : QWidget(parent),
-      session_(session),
-      difficulties_{ Difficulty::Easy(), Difficulty::Normal(), Difficulty::Hard() } {
+    : QWidget(parent), session_(session),
+      difficulties_{Difficulty::Easy(), Difficulty::Normal(), Difficulty::Hard()} {
 
     setWindowTitle(QStringLiteral("Number Guess Game"));
 
@@ -53,8 +54,8 @@ GameWindow::GameWindow(GameSession& session, const QString& scoreFileText, QWidg
     difficultyBox_ = new QComboBox(this);
     difficultyBox_->setObjectName(QStringLiteral("difficultyBox"));
     for (const auto& d : difficulties_) {
-        difficultyBox_->addItem(QStringLiteral("%1 (%2-%3)")
-            .arg(QString::fromStdString(d.name)).arg(d.min).arg(d.max));
+        difficultyBox_->addItem(
+            QStringLiteral("%1 (%2-%3)").arg(QString::fromStdString(d.name)).arg(d.min).arg(d.max));
     }
 
     startButton_ = new QPushButton(QStringLiteral("Start"), this);
@@ -97,6 +98,7 @@ GameWindow::GameWindow(GameSession& session, const QString& scoreFileText, QWidg
     layout->addWidget(bestLabel_);
     if (!scoreFileText.isEmpty()) {
         auto* fileLabel = new QLabel(QStringLiteral("Scores: %1").arg(scoreFileText), this);
+        fileLabel->setObjectName(QStringLiteral("scoreFileLabel"));
         fileLabel->setWordWrap(true);
         fileLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
         layout->addWidget(fileLabel);
@@ -151,8 +153,8 @@ void GameWindow::submitGuess() {
 
 void GameWindow::showOutcome(int value, const GuessOutcome& outcome) {
     const QString text = describe(outcome.event);
-    historyList_->addItem(QStringLiteral("#%1  %2  →  %3")
-        .arg(session_.attempts()).arg(value).arg(text));
+    historyList_->addItem(
+        QStringLiteral("#%1  %2  →  %3").arg(session_.attempts()).arg(value).arg(text));
     historyList_->scrollToBottom();
     setMessage(text);
 

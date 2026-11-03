@@ -17,8 +17,7 @@ constexpr std::size_t kMaxLineLength = 256;
 
 ConsoleUI::ConsoleUI() : ConsoleUI(std::cin, std::cout) {}
 
-ConsoleUI::ConsoleUI(std::istream& in, std::ostream& out)
-    : in_(in), out_(out) {}
+ConsoleUI::ConsoleUI(std::istream& in, std::ostream& out) : in_(in), out_(out) {}
 
 std::string ConsoleUI::readLine() {
     std::string line;
@@ -26,7 +25,7 @@ std::string ConsoleUI::readLine() {
         throw InputClosedError{};
     }
     if (line.size() > kMaxLineLength) {
-        line.clear();  // 長すぎる入力は破棄して「空入力」として扱う
+        line.clear(); // 長すぎる入力は破棄して「空入力」として扱う
     }
     return line;
 }
@@ -66,28 +65,27 @@ int ConsoleUI::inputGuess(const Difficulty& diff) {
 }
 
 void ConsoleUI::handleEvent(const GameEvent& event) {
-    std::visit([&](auto&& e) {
-        using T = std::decay_t<decltype(e)>;
+    std::visit(
+        [&](auto&& e) {
+            using T = std::decay_t<decltype(e)>;
 
-        if constexpr (std::is_same_v<T, TooSmall>) {
-            out_ << "Too small\n";
-        }
-        else if constexpr (std::is_same_v<T, TooLarge>) {
-            out_ << "Too large\n";
-        }
-        else if constexpr (std::is_same_v<T, Correct>) {
-            out_ << "Correct! Attempts: " << e.attempts << "\n";
-        }
-    }, event);
+            if constexpr (std::is_same_v<T, TooSmall>) {
+                out_ << "Too small\n";
+            } else if constexpr (std::is_same_v<T, TooLarge>) {
+                out_ << "Too large\n";
+            } else if constexpr (std::is_same_v<T, Correct>) {
+                out_ << "Correct! Attempts: " << e.attempts << "\n";
+            }
+        },
+        event);
 }
-
 
 void ConsoleUI::showBestScore(const ScoreRecord& best, bool isNewRecord) {
     if (isNewRecord) {
         out_ << "New record! ";
     }
-    out_ << "Best for " << best.difficulty << ": "
-         << best.attempts << " attempts by " << best.player << "\n";
+    out_ << "Best for " << best.difficulty << ": " << best.attempts << " attempts by "
+         << best.player << "\n";
 }
 
 void ConsoleUI::showWarning(const std::string& message) {

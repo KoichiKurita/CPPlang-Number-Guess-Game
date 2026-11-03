@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include "domain/HighScore.h"
+#include <gtest/gtest.h>
 
 #include <vector>
 
@@ -11,7 +11,7 @@ TEST(HighScoreTest, PicksFewestAttemptsForDifficulty) {
     const std::vector<ScoreRecord> records{
         {"A", "Easy", 5},
         {"B", "Easy", 2},
-        {"C", "Hard", 1},   // 別の難易度は対象外
+        {"C", "Hard", 1}, // 別の難易度は対象外
         {"D", "Easy", 4},
     };
 
@@ -28,14 +28,17 @@ TEST(HighScoreTest, TieKeepsEarlierRecord) {
         {"Second", "Easy", 3},
     };
 
-    EXPECT_EQ(bestScore(records, "Easy")->player, "First");
+    const auto best = bestScore(records, "Easy");
+
+    ASSERT_TRUE(best.has_value());
+    EXPECT_EQ(best->player, "First");
 }
 
 TEST(HighScoreTest, IsNewRecordOnlyWhenStrictlyBetter) {
     const ScoreRecord previous{"A", "Easy", 3};
 
-    EXPECT_TRUE(isNewRecord(std::nullopt, 10));   // 初回は必ず更新
+    EXPECT_TRUE(isNewRecord(std::nullopt, 10)); // 初回は必ず更新
     EXPECT_TRUE(isNewRecord(previous, 2));
-    EXPECT_FALSE(isNewRecord(previous, 3));       // 同点は更新しない
+    EXPECT_FALSE(isNewRecord(previous, 3)); // 同点は更新しない
     EXPECT_FALSE(isNewRecord(previous, 4));
 }
