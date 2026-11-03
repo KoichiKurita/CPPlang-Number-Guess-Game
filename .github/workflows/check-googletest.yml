@@ -1,0 +1,108 @@
+name: Check googletest
+
+# googletest は CMake の FetchContent で取得しており、Dependabot の対象外のため、
+# このワークフローで次の 2 つを確認する。
+#   1. 固定しているコミットが、そのバージョンのタグと一致しているか（取り違えの検出）
+#   2. 新しいリリースが出ていないか（出ていれば Issue で知らせる）
+on:
+  schedule:
+    - cron: "0 0 * * 1"   # 毎週月曜 9:00（日本時間）
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'tests/CMakeLists.txt'
+      - '.github/workflows/check-googletest.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check googletest version
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write   # 新しいリリースを Issue で知らせるため
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Read pinned version
+        id: pinned
+        run: |
+          version=$(sed -n 's/^set(NGG_GOOGLETEST_VERSION \(v[0-9.]*\))$/\1/p' tests/CMakeLists.txt)
+          commit=$(sed -n 's/^set(NGG_GOOGLETEST_COMMIT \([0-9a-f]\{40\}\))$/\1/p' tests/CMakeLists.txt)
+          if [[ -z "${version}" || -z "${commit}" ]]; then
+            echo "::error::NGG_GOOGLETEST_VERSION / NGG_GOOGLETEST_COMMIT not found in tests/CMakeLists.txt"
+            exit 1
+          fi
+          echo "Pinned: ${version} (${commit})"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "commit=${commit}" >> "${GITHUB_OUTPUT}"
+
+      - name: Verify pinned commit matches the tag
+        env:
+          VERSION: ${{ steps.pinned.outputs.version }}
+          COMMIT: ${{ steps.pinned.outputs.commit }}
+        run: |
+          refs=$(git ls-remote https://github.com/google/googletest.git "refs/tags/${VERSION}*")
+          # 注釈付きタグ（^{}）があればそれが指すコミットを、なければタグそのものを使う
+          actual=$(awk -v t="refs/tags/${VERSION}^{}" '$2 == t { print $1 }' <<< "${refs}")
+          if [[ -z "${actual}" ]]; then
+            actual=$(awk -v t="refs/tags/${VERSION}" '$2 == t { print $1 }' <<< "${refs}")
+          fi
+          if [[ "${actual}" != "${COMMIT}" ]]; then
+            echo "::error::${VERSION} points to ${actual:-nothing}, but ${COMMIT} is pinned"
+            exit 1
+          fi
+          echo "OK: ${VERSION} = ${COMMIT}"
+
+      - name: Notify newer release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          CURRENT: ${{ steps.pinned.outputs.version }}
+        run: |
+          latest=$(gh release view --repo google/googletest --json tagName --jq .tagName)
+          echo "Latest release: ${latest}"
+          if [[ "${latest}" == "${CURRENT}" ]]; then
+            echo "googletest is up to date"
+            exit 0
+          fi
+
+          title="googletest ${latest} が公開されました（現在: ${CURRENT}）"
+          open=$(gh issue list --repo "${REPO}" --state open --search "in:title \"googletest ${latest}\"" \
+                   --json number --jq 'length')
+          if [[ "${open}" != "0" ]]; then
+            echo "An issue for ${latest} is already open"
+            exit 0
+          fi
+
+          refs=$(git ls-remote https://github.com/google/googletest.git "refs/tags/${latest}*")
+          commit=$(awk -v t="refs/tags/${latest}^{}" '$2 == t { print $1 }' <<< "${refs}")
+          if [[ -z "${commit}" ]]; then
+            commit=$(awk -v t="refs/tags/${latest}" '$2 == t { print $1 }' <<< "${refs}")
+          fi
+
+          cat > issue.md <<BODY
+          googletest の新しいリリース **${latest}** が公開されました（現在固定しているのは ${CURRENT}）。
+
+          - リリースノート: https://github.com/google/googletest/releases/tag/${latest}
+          - コミット: \`${commit}\`
+
+          ## 更新手順
+          1. \`tests/CMakeLists.txt\` の 2 行を書き換える
+             \`\`\`cmake
+             set(NGG_GOOGLETEST_VERSION ${latest})
+             set(NGG_GOOGLETEST_COMMIT ${commit})
+             \`\`\`
+          2. リリースノートで、互換性のない変更（必要な C++ の版、CMake の最低バージョンなど）がないか確認する
+          3. \`cmake --preset qt && cmake --build --preset qt && ctest --preset qt\` で確認する
+          4. PR を作成し、CI がすべて成功することを確認する
+
+          このIssueは \`.github/workflows/check-googletest.yml\` が自動で作成しました。
+          BODY
+
+          gh label create dependencies --repo "${REPO}" --color 0366d6 \
+            --description "Dependency updates" --force
+          gh issue create --repo "${REPO}" --title "${title}" --body-file issue.md --label dependencies
