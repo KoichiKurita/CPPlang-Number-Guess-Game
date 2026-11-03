@@ -14,6 +14,7 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 include(CompilerWarnings)
 include(Sanitizers)
 include(ClangTidy)
+include(Coverage)
 
 # バージョン情報のヘッダを生成する（project(VERSION) を唯一の情報源にする）
 configure_file(cmake/Version.h.in ${PROJECT_BINARY_DIR}/generated/Version.h @ONLY)
