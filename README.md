@@ -45,7 +45,7 @@
 
 ### 配布物の検証
 
-配布物は GitHub Actions だけで作られ、改ざんされていないことを次の 2 つの方法で確かめられます。
+配布物は GitHub Actions だけで作られ、改ざんされていないことを次の方法で確かめられます。
 
 ```powershell
 # 1. チェックサム（.zip.sha256 に書かれた値と一致すること）
@@ -53,6 +53,13 @@ Get-FileHash .\NumberGuessGame-v<バージョン>-windows-x64.zip -Algorithm SHA
 
 # 2. 来歴証明（このリポジトリの CI で、どのコミットから作られたかを Sigstore の署名で確認する）
 gh attestation verify .\NumberGuessGame-v<バージョン>-windows-x64.zip --repo KoichiKurita/CPPlang-Number-Guess-Game
+```
+
+各リリースには、証明そのもの（Sigstore の bundle）も `NumberGuessGame-v<バージョン>-windows-x64.intoto.jsonl` として添付しています。
+GitHub に保存された証明を参照せず、このファイルを使って検証することもできます。
+
+```powershell
+gh attestation verify .\NumberGuessGame-v<バージョン>-windows-x64.zip --repo KoichiKurita/CPPlang-Number-Guess-Game --bundle .\NumberGuessGame-v<バージョン>-windows-x64.intoto.jsonl
 ```
 
 来歴証明の一覧は、リポジトリの [Attestations](https://github.com/KoichiKurita/CPPlang-Number-Guess-Game/attestations) でも確認できます。
@@ -248,7 +255,7 @@ mkdir -p work && ./build/fuzz/fuzz/fuzz_csv -max_total_time=60 work fuzz/corpus/
 | 依存関係の古さ・脆弱性 | Dependabot と googletest の確認ワークフローで更新を検知する。公開から 7 日たったバージョンだけを取り込み（クールダウン）、乗っ取られた直後のバージョンを避ける |
 | CI で使う外部 Action の改ざん | タグ（`@v4` など）ではなくコミットハッシュで固定し、書き換えられた Action が実行されないようにする |
 | CI で使う Python のツールの改ざん | 間接的な依存関係まで含めてバージョンとハッシュを固定し（pip-tools）、`--require-hashes` でインストールする。PyPI のファイルが差し替えられても、インストールの時点で止まる |
-| 配布物の改ざん・なりすまし | SHA-256 チェックサムと、Sigstore で署名した来歴証明（SLSA build provenance）を付け、公開前に CI で検証する |
+| 配布物の改ざん・なりすまし | SHA-256 チェックサムと、Sigstore で署名した来歴証明（SLSA build provenance）を付け、公開前に CI で検証する。証明のファイルも Release に添付し、GitHub に保存した証明を参照しなくても検証できるようにする |
 | セキュリティ対策の抜け漏れ | OpenSSF Scorecard で、外部の基準（依存関係の固定・最小権限・ブランチの保護など）に沿って毎週採点し、点数の低い項目を見直す |
 | 脆弱性の報告が公開されてしまう | [SECURITY.md](SECURITY.md) で報告の窓口（GitHub の非公開の脆弱性報告）と対応の流れを定め、修正前に悪用されることを防ぐ |
 
