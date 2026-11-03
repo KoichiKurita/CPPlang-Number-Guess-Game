@@ -71,3 +71,6 @@ coverage/
 
 # Editor / language server cache (clangd)
 .cache/
+
+# Python cache
+__pycache__/
