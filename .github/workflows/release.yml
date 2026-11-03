@@ -9,6 +9,7 @@ on:
     paths:
       - '.github/workflows/release.yml'
       - 'packaging/**'
+      - 'tools/sbom/**'
       - 'CMakePresets.json'
 
 # 既定は読み取りのみ。書き込みが必要なジョブだけ個別に権限を与える
@@ -20,6 +21,8 @@ jobs:
     name: Package (Windows x64)
     runs-on: windows-2025
     timeout-minutes: 45
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     defaults:
       run:
         shell: msys2 {0}
@@ -85,16 +88,68 @@ jobs:
           path: |
             dist/*.zip
             dist/*.zip.sha256
+            dist/*.packages.tsv
           if-no-files-found: error
 
-    # 配布物に「このリポジトリの、このワークフローの、このコミットから作られた」ことを示す
+  # 配布物に含まれる部品（Qt・ICU・コンパイラのランタイムなど）の一覧を、
+  # 標準形式（SPDX 2.3）の SBOM として作り、形式を検証する
+  sbom:
+    name: Generate SBOM
+    needs: package-windows
+    runs-on: ubuntu-24.04
+    env:
+      NAME: NumberGuessGame-v${{ needs.package-windows.outputs.version }}-windows-x64
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: windows-package
+          path: dist
+
+      - name: Install tools
+        run: |
+          python3 -m venv "${RUNNER_TEMP}/sbom-venv"
+          "${RUNNER_TEMP}/sbom-venv/bin/pip" install --quiet -r tools/sbom/requirements.txt
+          echo "${RUNNER_TEMP}/sbom-venv/bin" >> "${GITHUB_PATH}"
+
+      - name: Generate SBOM
+        env:
+          VERSION: ${{ needs.package-windows.outputs.version }}
+          REPO: ${{ github.repository }}
+        run: |
+          # 同じコミットからは同じ SBOM になるよう、作成日時にコミットの日時を使う
+          SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
+          export SOURCE_DATE_EPOCH
+          python3 packaging/sbom/generate_spdx.py \
+            --zip "dist/${NAME}.zip" \
+            --packages "dist/${NAME}.packages.tsv" \
+            --version "${VERSION}" \
+            --repository "${REPO}" \
+            --commit "${GITHUB_SHA}" \
+            --license-file LICENSE \
+            --output "dist/${NAME}.spdx.json"
+
+      - name: Validate SBOM
+        run: pyspdxtools -i "dist/${NAME}.spdx.json"
+
+      - name: Upload SBOM
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: sbom
+          path: dist/*.spdx.json
+          if-no-files-found: error
+
+  # 配布物に「このリポジトリの、このワークフローの、このコミットから作られた」ことを示す
   # 署名付きの来歴証明（SLSA build provenance）を付ける。
   # 署名に必要な権限は、ビルドとは別のこのジョブだけに与える
   attest:
-    name: Attest build provenance
-    needs: package-windows
+    name: Attest build provenance and SBOM
+    needs: [package-windows, sbom]
     if: github.ref_type == 'tag'
     runs-on: ubuntu-24.04
+    env:
+      NAME: NumberGuessGame-v${{ needs.package-windows.outputs.version }}-windows-x64
     permissions:
       id-token: write           # Sigstore の署名用証明書を得るための OIDC トークン
       attestations: write       # 来歴証明をリポジトリに保存する
@@ -103,24 +158,35 @@ jobs:
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: windows-package
+          pattern: '{windows-package,sbom}'
+          merge-multiple: true
           path: dist
 
+      # どのワークフロー・コミットから作られたか（SLSA build provenance）
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          subject-path: dist/*.zip
+          subject-path: dist/${{ env.NAME }}.zip
+
+      # 何が含まれているか（SBOM）。zip と SBOM の対応を署名付きで記録する
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/${{ env.NAME }}.zip
+          sbom-path: dist/${{ env.NAME }}.spdx.json
 
   publish:
     name: Publish GitHub Release (draft)
-    needs: attest
+    needs: [package-windows, attest]
     if: github.ref_type == 'tag'
     runs-on: ubuntu-24.04
+    env:
+      NAME: NumberGuessGame-v${{ needs.package-windows.outputs.version }}-windows-x64
     permissions:
       contents: write   # Release の作成と配布物の添付に必要
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: windows-package
+          pattern: '{windows-package,sbom}'
+          merge-multiple: true
           path: dist
 
       # 公開する前に、来歴証明とチェックサムを利用者と同じ方法で検証する
@@ -130,10 +196,10 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           cd dist
-          sha256sum --check ./*.zip.sha256
-          for zip in ./*.zip; do
-            gh attestation verify "${zip}" --repo "${REPO}"
-          done
+          sha256sum --check "${NAME}.zip.sha256"
+          gh attestation verify "${NAME}.zip" --repo "${REPO}"
+          gh attestation verify "${NAME}.zip" --repo "${REPO}" \
+            --predicate-type https://spdx.dev/Document/v2.3
 
       # 既に Release があれば配布物を差し替え、なければ下書きとして作る
       - name: Create or update release
@@ -142,9 +208,11 @@ jobs:
           TAG: ${{ github.ref_name }}
           REPO: ${{ github.repository }}
         run: |
+          # 公開するのは zip・チェックサム・SBOM の 3 つ（.packages.tsv は SBOM の材料なので公開しない）
+          files=("dist/${NAME}.zip" "dist/${NAME}.zip.sha256" "dist/${NAME}.spdx.json")
           if gh release view "${TAG}" --repo "${REPO}" > /dev/null 2>&1; then
-            gh release upload "${TAG}" dist/* --clobber --repo "${REPO}"
+            gh release upload "${TAG}" "${files[@]}" --clobber --repo "${REPO}"
           else
-            gh release create "${TAG}" dist/* --repo "${REPO}" \
+            gh release create "${TAG}" "${files[@]}" --repo "${REPO}" \
               --draft --verify-tag --generate-notes --title "${TAG}"
           fi
