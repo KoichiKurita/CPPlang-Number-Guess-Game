@@ -74,3 +74,10 @@ coverage/
 
 # Python cache
 __pycache__/
+
+# libFuzzer が問題を起こした入力を保存するファイル
+crash-*
+leak-*
+timeout-*
+oom-*
+slow-unit-*

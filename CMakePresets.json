@@ -63,6 +63,16 @@
       }
     },
     {
+      "name": "fuzz",
+      "displayName": "Fuzzing (Ninja, Clang, libFuzzer + ASan + UBSan)",
+      "description": "Builds the fuzz targets and the tests with Clang. Linux or macOS only.",
+      "inherits": "ci",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++",
+        "NGG_BUILD_FUZZERS": "ON"
+      }
+    },
+    {
       "name": "release",
       "displayName": "Release (Ninja, Release, Qt GUI, warnings as errors)",
       "description": "Optimized build used for distribution packages. Requires Qt6.",
@@ -93,6 +103,7 @@
     { "name": "qt",   "configurePreset": "qt" },
     { "name": "coverage", "configurePreset": "coverage" },
     { "name": "tidy", "configurePreset": "tidy" },
+    { "name": "fuzz", "configurePreset": "fuzz" },
     { "name": "release", "configurePreset": "release" },
     { "name": "msvc", "configurePreset": "msvc", "configuration": "Debug" }
   ],
@@ -107,6 +118,7 @@
     { "name": "ci",   "inherits": "base", "configurePreset": "ci" },
     { "name": "qt",   "inherits": "base", "configurePreset": "qt" },
     { "name": "coverage", "inherits": "base", "configurePreset": "coverage" },
+    { "name": "fuzz", "inherits": "base", "configurePreset": "fuzz" },
     { "name": "release", "inherits": "base", "configurePreset": "release" },
     {
       "name": "asan",
