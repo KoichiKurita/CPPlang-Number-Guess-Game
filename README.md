@@ -19,7 +19,7 @@
 |---|---|
 | 設計 | レイヤードアーキテクチャ＋ポート&アダプタ。ゲームのルールは I/O を持たない純粋関数 |
 | UI | 同じロジックを **Console 版** と **Qt 6 版（GUI）** で共有 |
-| テスト | GoogleTest / Qt Test で **77 件**（純粋関数・テストダブル・実ファイル・画面操作・アーキテクチャテスト）。カバレッジを Codecov で計測 |
+| テスト | GoogleTest / Qt Test で **88 件**（純粋関数・テストダブル・実ファイル・画面操作・アーキテクチャテスト）。カバレッジを Codecov で計測 |
 | CI | Windows（MinGW / MSVC）・Linux（GCC / Clang）の **7 ジョブ**。Linux では AddressSanitizer / UBSan |
 | 品質 | 警告をエラー扱い（`-Wall -Wextra -Wpedantic -Wconversion` ほか、MSVC は `/W4 /permissive-`）、clang-tidy による静的解析、clang-format による書式の統一 |
 | セキュリティ | 入力の許可リスト検証、CSV インジェクション対策（多層防御）、CI の最小権限 |
@@ -38,6 +38,8 @@
 |---|---|
 | Windows | `%APPDATA%\NumberGuessGame\scores.csv` |
 | Linux / macOS | `$XDG_DATA_HOME/NumberGuessGame/scores.csv`（未設定なら `~/.local/share/...`） |
+
+記録する項目は、名前・難易度・回数・日時（UTC。例: `2026-11-03T14:35:07Z`）です。日時の列がない v2.4.0 以前のファイルも、そのまま読み込めます。
 
 ## ダウンロード（Windows）
 
@@ -179,12 +181,12 @@ flowchart TD
 
 ## 品質保証
 
-### テスト（77 件）
+### テスト（88 件）
 
 | 対象 | テスト | 手法 |
 |---|---|---|
-| domain | `GameLogicTest` / `InputParserTest` / `PlayerNameTest` / `HighScoreTest` | 純粋関数の入出力・境界値 |
-| app | `GameSessionTest` / `GameControllerTest` | Mock / Fake の注入、失敗の再現 |
+| domain | `GameLogicTest` / `InputParserTest` / `PlayerNameTest` / `HighScoreTest` / `TimestampTest` | 純粋関数の入出力・境界値（うるう年・存在しない日付など） |
+| app | `GameSessionTest` / `GameControllerTest` | Mock / Fake の注入（乱数・保存先・時計）、失敗の再現 |
 | infra | `RandomMTTest` / `CsvTest` / `CsvScoreRepositoryTest` | シード固定、ラウンドトリップ、一時フォルダの実ファイル |
 | ui | `ConsoleUITest` | `std::istringstream` / `std::ostringstream` の注入 |
 | qt | `GameWindowTest`（Qt Test） | 文字入力・クリック・Enter による画面操作（CI では offscreen） |
@@ -210,6 +212,7 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 | `parseIntInRange` / `parseDifficulty` | キーボード | 値は必ず範囲内。文字列に戻して解析し直すと同じ値。難易度は 3 種類のどれか |
 | `parsePlayerName` | キーボード | 長さ・先頭・文字の規則を守る。CSV の数式インジェクション対策が必要な名前を通さない |
 | `csv::parseLine` | スコアファイル（編集・改ざんされうる） | 解析した結果を書き出して読み直すと、元と同じになる |
+| `timestamp::parse` | スコアファイルの日時の列 | 解析できたら範囲内で、文字列に戻すと完全に一致する（書き方が 1 通りしかない） |
 
 CI では毎回、各関数を 60 秒ずつ実行します。手元で実行する場合（Linux / macOS の Clang）：
 
