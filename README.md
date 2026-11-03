@@ -18,8 +18,8 @@
 | 設計 | レイヤードアーキテクチャ＋ポート&アダプタ。ゲームのルールは I/O を持たない純粋関数 |
 | UI | 同じロジックを **Console 版** と **Qt 6 版（GUI）** で共有 |
 | テスト | GoogleTest / Qt Test で **71 件**（純粋関数・テストダブル・実ファイル・画面操作・アーキテクチャテスト） |
-| CI | Windows（MinGW / MSVC）・Linux（GCC / Clang）の **5 ジョブ**。Linux では AddressSanitizer / UBSan |
-| 品質 | 警告をエラー扱い（`-Wall -Wextra -Wpedantic -Wconversion` ほか、MSVC は `/W4 /permissive-`） |
+| CI | Windows（MinGW / MSVC）・Linux（GCC / Clang）の **6 ジョブ**。Linux では AddressSanitizer / UBSan |
+| 品質 | 警告をエラー扱い（`-Wall -Wextra -Wpedantic -Wconversion` ほか、MSVC は `/W4 /permissive-`）、clang-tidy による静的解析、clang-format による書式の統一 |
 | セキュリティ | 入力の許可リスト検証、CSV インジェクション対策（多層防御）、CI の最小権限 |
 | 信頼性 | 不正入力・EOF でも停止しない、保存失敗でゲームを落とさない、壊れたファイルを読み飛ばす |
 
@@ -74,7 +74,25 @@ cmake --preset qt && cmake --build --preset qt && ctest --preset qt
 | `ci` | 警告をエラー扱い（Console 版とテスト） |
 | `qt` | `ci` ＋ Qt 版 GUI と画面テスト |
 | `asan` | `ci` ＋ AddressSanitizer / UBSan（Linux / macOS の GCC・Clang） |
+| `tidy` | `qt` ＋ clang-tidy（コンパイルと同時に静的解析） |
+| `release` | 配布用の Release ビルド（Qt 版を含む） |
 | `msvc` | Visual Studio（Windows） |
+
+### 書式と静的解析
+
+書式は `.clang-format`、静的解析のルールは `.clang-tidy` で定義しています（LLVM 23 系で確認）。
+
+```bash
+# Windows（MSYS2 MINGW64）での準備
+pacman -S --needed mingw-w64-x86_64-clang mingw-w64-x86_64-clang-tools-extra
+
+# 書式を整える / 確認する
+git ls-files '*.cpp' '*.h' | xargs clang-format -i
+git ls-files '*.cpp' '*.h' | xargs clang-format --dry-run --Werror
+
+# 静的解析（コンパイルと同時に clang-tidy を実行する）
+cmake --preset tidy && cmake --build --preset tidy
+```
 
 ## アーキテクチャ
 
@@ -126,6 +144,7 @@ flowchart TD
 | Linux (GCC, ASan + UBSan) | Ubuntu 24.04 | メモリ破壊・未定義動作の実行時検出 |
 | Linux (Clang, ASan + UBSan) | Ubuntu 24.04 | 別コンパイラでの警告とサニタイザ |
 | Linux (GCC, Qt GUI) | Ubuntu 24.04 + Qt 6 | Qt 版の別環境でのビルドと画面テスト |
+| Lint (clang-format, clang-tidy) | Ubuntu 24.04 + LLVM 23 | 書式の確認と静的解析（指摘があれば失敗） |
 
 - テストが 0 件なら失敗にする（`noTestsAction: error`）
 - ワークフローの権限は `contents: read` のみ（最小権限）
