@@ -1,5 +1,6 @@
 #include "app/GameController.h"
 #include "FakeScoreRepository.h"
+#include "FixedClock.h"
 #include "MockRandom.h"
 #include "MockUI.h"
 #include <gtest/gtest.h>
@@ -12,7 +13,8 @@ TEST(GameControllerTest, PlaysUntilCorrectAndSavesScore) {
     FakeScoreRepository repo;
     MockUI ui(Difficulty::Easy(), std::queue<int>({3, 8, 5}), "Alice");
 
-    GameController controller(random, repo, ui);
+    FixedClock clock;
+    GameController controller(random, repo, clock, ui);
     controller.run();
 
     // UI に通知されたイベントの順序
@@ -35,7 +37,8 @@ TEST(GameControllerTest, GeneratesAnswerWithinSelectedDifficulty) {
     FakeScoreRepository repo;
     MockUI ui(Difficulty::Hard(), std::queue<int>({42}));
 
-    GameController controller(random, repo, ui);
+    FixedClock clock;
+    GameController controller(random, repo, clock, ui);
     controller.run();
 
     EXPECT_EQ(random.callCount(), 1);
@@ -48,7 +51,8 @@ TEST(GameControllerTest, InputClosedMidGamePropagatesAndDoesNotSave) {
     FakeScoreRepository repo;
     MockUI ui(Difficulty::Easy(), std::queue<int>({1, 2})); // 正解前に入力が尽きる
 
-    GameController controller(random, repo, ui);
+    FixedClock clock;
+    GameController controller(random, repo, clock, ui);
 
     EXPECT_THROW(controller.run(), InputClosedError);
     EXPECT_TRUE(repo.records().empty());
@@ -60,7 +64,8 @@ TEST(GameControllerTest, FirstPlayIsNewRecord) {
     FakeScoreRepository repo;
     MockUI ui(Difficulty::Easy(), std::queue<int>({5}));
 
-    GameController(random, repo, ui).run();
+    FixedClock clock;
+    GameController(random, repo, clock, ui).run();
 
     ASSERT_TRUE(ui.bestScoreShown().has_value());
     EXPECT_TRUE(ui.bestScoreShown()->isNewRecord);
@@ -72,7 +77,8 @@ TEST(GameControllerTest, ShowsPreviousBestWhenNotBeaten) {
     FakeScoreRepository repo({{"Bob", "Easy", 2}});
     MockUI ui(Difficulty::Easy(), std::queue<int>({1, 2, 5})); // 3回で正解
 
-    GameController(random, repo, ui).run();
+    FixedClock clock;
+    GameController(random, repo, clock, ui).run();
 
     ASSERT_TRUE(ui.bestScoreShown().has_value());
     EXPECT_FALSE(ui.bestScoreShown()->isNewRecord);
@@ -85,7 +91,8 @@ TEST(GameControllerTest, BestScoreIsPerDifficulty) {
     FakeScoreRepository repo({{"Bob", "Hard", 1}}); // 別の難易度の記録
     MockUI ui(Difficulty::Easy(), std::queue<int>({1, 5}));
 
-    GameController(random, repo, ui).run();
+    FixedClock clock;
+    GameController(random, repo, clock, ui).run();
 
     ASSERT_TRUE(ui.bestScoreShown().has_value());
     EXPECT_TRUE(ui.bestScoreShown()->isNewRecord);
@@ -98,7 +105,8 @@ TEST(GameControllerTest, SaveFailureShowsWarningInsteadOfCrashing) {
     repo.failOnSave = true;
     MockUI ui(Difficulty::Easy(), std::queue<int>({5}));
 
-    EXPECT_NO_THROW(GameController(random, repo, ui).run());
+    FixedClock clock;
+    EXPECT_NO_THROW(GameController(random, repo, clock, ui).run());
 
     ASSERT_EQ(ui.warnings().size(), 1u);
     EXPECT_NE(ui.warnings()[0].find("Could not save your score"), std::string::npos);
@@ -111,7 +119,8 @@ TEST(GameControllerTest, LoadFailureStillSavesButSkipsBestScore) {
     repo.failOnLoad = true;
     MockUI ui(Difficulty::Easy(), std::queue<int>({5}));
 
-    EXPECT_NO_THROW(GameController(random, repo, ui).run());
+    FixedClock clock;
+    EXPECT_NO_THROW(GameController(random, repo, clock, ui).run());
 
     EXPECT_EQ(repo.records().size(), 1u); // 保存はできている
     ASSERT_EQ(ui.warnings().size(), 1u);

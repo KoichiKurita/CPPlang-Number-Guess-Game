@@ -1,6 +1,7 @@
 #pragma once
 
 #include "app/GameSession.h"
+#include "app/ports/IClock.h"
 #include "app/ports/IGameUI.h"
 #include "app/ports/IRandom.h"
 #include "app/ports/IScoreRepository.h"
@@ -9,7 +10,7 @@
 // ルールの適用とスコアの保存は GameSession に任せる。
 class GameController {
 public:
-    GameController(IRandom& random, IScoreRepository& repo, IGameUI& ui);
+    GameController(IRandom& random, IScoreRepository& repo, IClock& clock, IGameUI& ui);
 
     void run();
 

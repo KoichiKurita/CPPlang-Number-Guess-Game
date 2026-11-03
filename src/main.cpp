@@ -4,6 +4,7 @@
 #include "infra/CsvScoreRepository.h"
 #include "infra/RandomMT.h"
 #include "infra/ScoreFilePath.h"
+#include "infra/SystemClock.h"
 #include "ui/ConsoleUI.h"
 
 #include <cstdlib>
@@ -45,12 +46,13 @@ int main(int argc, char* argv[]) {
     try {
         RandomMT random;
         CsvScoreRepository repo(defaultScoreFilePath());
+        SystemClock clock;
         ConsoleUI ui;
 
         std::cout << kAppName << " v" << kAppVersion << "\n"
                   << "Scores are saved to: " << repo.file().string() << "\n\n";
 
-        GameController controller(random, repo, ui);
+        GameController controller(random, repo, clock, ui);
         controller.run();
         return EXIT_SUCCESS;
     } catch (const InputClosedError&) {

@@ -1,6 +1,7 @@
 #include "GameWindow.h"
 
 #include "FakeScoreRepository.h"
+#include "FixedClock.h"
 #include "MockRandom.h"
 
 #include <QComboBox>
@@ -31,7 +32,8 @@ private slots:
     void guessIsDisabledBeforeStart() {
         MockRandom random(5);
         FakeScoreRepository repo;
-        GameSession session(random, repo);
+        FixedClock clock;
+        GameSession session(random, repo, clock);
         GameWindow w(session);
 
         QVERIFY(!find<QLineEdit>(w, "guessEdit")->isEnabled());
@@ -41,7 +43,8 @@ private slots:
     void invalidNameShowsErrorAndDoesNotStart() {
         MockRandom random(5);
         FakeScoreRepository repo;
-        GameSession session(random, repo);
+        FixedClock clock;
+        GameSession session(random, repo, clock);
         GameWindow w(session);
 
         QTest::keyClicks(find<QLineEdit>(w, "nameEdit"), QStringLiteral("=1+1"));
@@ -55,7 +58,8 @@ private slots:
     void invalidGuessShowsErrorAndDoesNotCount() {
         MockRandom random(5);
         FakeScoreRepository repo;
-        GameSession session(random, repo);
+        FixedClock clock;
+        GameSession session(random, repo, clock);
         GameWindow w(session);
 
         QTest::keyClicks(find<QLineEdit>(w, "nameEdit"), QStringLiteral("Ko1"));
@@ -72,7 +76,8 @@ private slots:
     void playsToWinAndShowsBestScore() {
         MockRandom random(5);
         FakeScoreRepository repo;
-        GameSession session(random, repo);
+        FixedClock clock;
+        GameSession session(random, repo, clock);
         GameWindow w(session);
 
         find<QComboBox>(w, "difficultyBox")->setCurrentIndex(0); // Easy
@@ -97,7 +102,8 @@ private slots:
     void showsScoreFileLocationAndTooLargeHint() {
         MockRandom random(5);
         FakeScoreRepository repo;
-        GameSession session(random, repo);
+        FixedClock clock;
+        GameSession session(random, repo, clock);
         GameWindow w(session, QStringLiteral("C:/data/scores.csv"));
 
         QCOMPARE(find<QLabel>(w, "scoreFileLabel")->text(),
@@ -116,7 +122,8 @@ private slots:
         MockRandom random(5);
         FakeScoreRepository repo;
         repo.failOnSave = true;
-        GameSession session(random, repo);
+        FixedClock clock;
+        GameSession session(random, repo, clock);
         GameWindow w(session);
 
         QTest::keyClicks(find<QLineEdit>(w, "nameEdit"), QStringLiteral("Ko1"));
