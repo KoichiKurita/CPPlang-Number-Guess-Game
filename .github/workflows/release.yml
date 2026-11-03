@@ -110,7 +110,7 @@ jobs:
       - name: Install tools
         run: |
           python3 -m venv "${RUNNER_TEMP}/sbom-venv"
-          "${RUNNER_TEMP}/sbom-venv/bin/pip" install --quiet -r tools/sbom/requirements.txt
+          "${RUNNER_TEMP}/sbom-venv/bin/pip" install --quiet --require-hashes -r tools/sbom/requirements.txt
           echo "${RUNNER_TEMP}/sbom-venv/bin" >> "${GITHUB_PATH}"
 
       - name: Generate SBOM
@@ -163,15 +163,35 @@ jobs:
           path: dist
 
       # どのワークフロー・コミットから作られたか（SLSA build provenance）
-      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+      - name: Attest build provenance
+        id: provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: dist/${{ env.NAME }}.zip
 
       # 何が含まれているか（SBOM）。zip と SBOM の対応を署名付きで記録する
-      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+      - name: Attest SBOM
+        id: sbom
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: dist/${{ env.NAME }}.zip
           sbom-path: dist/${{ env.NAME }}.spdx.json
+
+      # 2 つの証明（Sigstore の bundle。1 行に 1 つの JSON）を 1 つのファイルにまとめ、Release に添付する。
+      # GitHub に保存した証明を参照しなくても、このファイルだけで検証できるようにするため。
+      # 拡張子 .intoto.jsonl は、in-toto 形式の証明を並べたファイルの慣習的な名前
+      - name: Bundle attestations
+        env:
+          PROVENANCE_BUNDLE: ${{ steps.provenance.outputs.bundle-path }}
+          SBOM_BUNDLE: ${{ steps.sbom.outputs.bundle-path }}
+        run: cat "${PROVENANCE_BUNDLE}" "${SBOM_BUNDLE}" > "dist/${NAME}.intoto.jsonl"
+
+      - name: Upload attestations
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: attestations
+          path: dist/${{ env.NAME }}.intoto.jsonl
+          if-no-files-found: error
 
   publish:
     name: Publish GitHub Release (draft)
@@ -185,11 +205,12 @@ jobs:
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          pattern: '{windows-package,sbom}'
+          pattern: '{windows-package,sbom,attestations}'
           merge-multiple: true
           path: dist
 
-      # 公開する前に、来歴証明とチェックサムを利用者と同じ方法で検証する
+      # 公開する前に、チェックサムと証明を利用者と同じ方法で検証する。
+      # 証明は、GitHub に保存したものと、Release に添付するファイル（--bundle）の両方で確かめる
       - name: Verify package
         env:
           GH_TOKEN: ${{ github.token }}
@@ -197,9 +218,15 @@ jobs:
         run: |
           cd dist
           sha256sum --check "${NAME}.zip.sha256"
+          # GitHub に保存した証明
           gh attestation verify "${NAME}.zip" --repo "${REPO}"
           gh attestation verify "${NAME}.zip" --repo "${REPO}" \
             --predicate-type https://spdx.dev/Document/v2.3
+          # Release に添付する証明のファイル
+          gh attestation verify "${NAME}.zip" --repo "${REPO}" \
+            --bundle "${NAME}.intoto.jsonl"
+          gh attestation verify "${NAME}.zip" --repo "${REPO}" \
+            --bundle "${NAME}.intoto.jsonl" --predicate-type https://spdx.dev/Document/v2.3
 
       # 既に Release があれば配布物を差し替え、なければ下書きとして作る
       - name: Create or update release
@@ -208,8 +235,13 @@ jobs:
           TAG: ${{ github.ref_name }}
           REPO: ${{ github.repository }}
         run: |
-          # 公開するのは zip・チェックサム・SBOM の 3 つ（.packages.tsv は SBOM の材料なので公開しない）
-          files=("dist/${NAME}.zip" "dist/${NAME}.zip.sha256" "dist/${NAME}.spdx.json")
+          # 公開するのは zip・チェックサム・SBOM・証明の 4 つ（.packages.tsv は SBOM の材料なので公開しない）
+          files=(
+            "dist/${NAME}.zip"
+            "dist/${NAME}.zip.sha256"
+            "dist/${NAME}.spdx.json"
+            "dist/${NAME}.intoto.jsonl"
+          )
           if gh release view "${TAG}" --repo "${REPO}" > /dev/null 2>&1; then
             gh release upload "${TAG}" "${files[@]}" --clobber --repo "${REPO}"
           else

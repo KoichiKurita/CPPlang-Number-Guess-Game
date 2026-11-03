@@ -87,6 +87,51 @@ jobs:
 
       - name: Test
         run: ctest --preset asan
+        
+  fuzzing:
+    name: Fuzzing (libFuzzer)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libclang-rt-dev   # libFuzzer とサニタイザのランタイム
+
+      - name: Configure
+        run: cmake --preset fuzz
+
+      - name: Build
+        run: cmake --build --preset fuzz
+
+      # 単体テストと、シードの入力（fuzz/corpus）での回帰テスト
+      - name: Test
+        run: ctest --preset fuzz
+
+      # 各ファジング用の関数を 60 秒ずつ実行する。
+      # 新しく見つかった入力は作業用のフォルダ（work/）に、問題を起こした入力は crashes/ に保存される
+      - name: Fuzz
+        run: |
+          mkdir -p crashes
+          for target in input_parser player_name csv; do
+            echo "::group::fuzz_${target}"
+            mkdir -p "work/${target}"
+            "build/fuzz/fuzz/fuzz_${target}" \
+              -max_total_time=60 -timeout=5 -print_final_stats=1 \
+              -artifact_prefix="crashes/${target}-" \
+              "work/${target}" "fuzz/corpus/${target}"
+            echo "::endgroup::"
+          done
+
+      # 問題を起こした入力を保存し、手元で再現できるようにする
+      - name: Upload crashes
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-crashes
+          path: crashes/
+          if-no-files-found: ignore
 
   linux-qt:
     name: Linux (GCC, Qt GUI)
@@ -120,7 +165,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ninja-build qt6-base-dev
           python3 -m venv "${RUNNER_TEMP}/lint-venv"
-          "${RUNNER_TEMP}/lint-venv/bin/pip" install --quiet -r tools/lint/requirements.txt
+          "${RUNNER_TEMP}/lint-venv/bin/pip" install --quiet --require-hashes -r tools/lint/requirements.txt
           echo "${RUNNER_TEMP}/lint-venv/bin" >> "${GITHUB_PATH}"
 
       - name: Show tool versions

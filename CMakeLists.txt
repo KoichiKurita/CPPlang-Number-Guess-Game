@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(NumberGuessGame
-    VERSION 2.3.0
+    VERSION 2.4.0
     LANGUAGES CXX
 )
 
@@ -38,9 +38,14 @@ if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
 
-
 # Qt 版 GUI（Qt6 が必要なので既定では無効）
 option(NGG_BUILD_QT "Build the Qt GUI (requires Qt6)" OFF)
 if(NGG_BUILD_QT)
     add_subdirectory(qt)
+endif()
+
+# ファジング（libFuzzer。Clang が必要なので既定では無効）
+option(NGG_BUILD_FUZZERS "Build the libFuzzer fuzz targets (requires Clang)" OFF)
+if(NGG_BUILD_FUZZERS)
+    add_subdirectory(fuzz)
 endif()

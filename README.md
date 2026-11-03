@@ -45,7 +45,7 @@
 
 ### 配布物の検証
 
-配布物は GitHub Actions だけで作られ、改ざんされていないことを次の 2 つの方法で確かめられます。
+配布物は GitHub Actions だけで作られ、改ざんされていないことを次の方法で確かめられます。
 
 ```powershell
 # 1. チェックサム（.zip.sha256 に書かれた値と一致すること）
@@ -53,6 +53,13 @@ Get-FileHash .\NumberGuessGame-v<バージョン>-windows-x64.zip -Algorithm SHA
 
 # 2. 来歴証明（このリポジトリの CI で、どのコミットから作られたかを Sigstore の署名で確認する）
 gh attestation verify .\NumberGuessGame-v<バージョン>-windows-x64.zip --repo KoichiKurita/CPPlang-Number-Guess-Game
+```
+
+各リリースには、証明そのもの（Sigstore の bundle）も `NumberGuessGame-v<バージョン>-windows-x64.intoto.jsonl` として添付しています。
+GitHub に保存された証明を参照せず、このファイルを使って検証することもできます。
+
+```powershell
+gh attestation verify .\NumberGuessGame-v<バージョン>-windows-x64.zip --repo KoichiKurita/CPPlang-Number-Guess-Game --bundle .\NumberGuessGame-v<バージョン>-windows-x64.intoto.jsonl
 ```
 
 来歴証明の一覧は、リポジトリの [Attestations](https://github.com/KoichiKurita/CPPlang-Number-Guess-Game/attestations) でも確認できます。
@@ -107,6 +114,7 @@ cmake --preset qt && cmake --build --preset qt && ctest --preset qt
 | `asan` | `ci` ＋ AddressSanitizer / UBSan（Linux / macOS の GCC・Clang） |
 | `tidy` | `qt` ＋ clang-tidy（コンパイルと同時に静的解析） |
 | `coverage` | `qt` ＋ カバレッジ計測（gcov。GCC・Clang） |
+| `fuzz` | Clang ＋ libFuzzer / ASan / UBSan でファジング用の実行ファイルとテストをビルド（Linux / macOS） |
 | `release` | 配布用の Release ビルド（Qt 版を含む） |
 | `msvc` | Visual Studio（Windows） |
 
@@ -124,6 +132,21 @@ git ls-files '*.cpp' '*.h' | xargs clang-format --dry-run --Werror
 
 # 静的解析（コンパイルと同時に clang-tidy を実行する）
 cmake --preset tidy && cmake --build --preset tidy
+```
+
+### Python のツール
+
+CI で使う Python のツール（clang-format / clang-tidy、SBOM の検証に使う spdx-tools）は、`tools/<用途>/requirements.in` に直接使うものだけを書き、[pip-tools](https://pip-tools.readthedocs.io/) で間接的な依存関係まで含めた**ハッシュ付き**の `requirements.txt` を作っています。
+CI では `--require-hashes` を付けてインストールし、ダウンロードしたファイルがハッシュと一致しなければ失敗させます。
+
+更新は Dependabot が、`requirements.in` と `requirements.txt` の両方を書き換えて提案します。
+手で作り直す場合は、CI と同じ **Linux・Python 3.12** で実行します（Windows で作ると、Windows でだけ必要な依存関係が入り、CI と内容が変わるため）。
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install pip-tools
+cd tools/lint
+../../.venv/bin/pip-compile --generate-hashes --allow-unsafe --strip-extras --no-emit-index-url \
+  --output-file=requirements.txt requirements.in
 ```
 
 ## アーキテクチャ
@@ -177,6 +200,24 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 ./scripts/coverage.sh build/coverage coverage   # coverage/html/index.html をブラウザで開く
 ```
 
+### ファジング
+
+外から入ってくる文字列を最初に受け取る処理に、[libFuzzer](https://llvm.org/docs/LibFuzzer.html) で自動生成した入力を大量に与え、AddressSanitizer / UBSan と組み合わせて、クラッシュ・メモリ破壊・未定義動作を検出します。
+クラッシュしないことに加えて、どんな入力でも成り立つべき**性質**も確認しています。
+
+| 対象 | 入力の出どころ | 確認する性質 |
+|---|---|---|
+| `parseIntInRange` / `parseDifficulty` | キーボード | 値は必ず範囲内。文字列に戻して解析し直すと同じ値。難易度は 3 種類のどれか |
+| `parsePlayerName` | キーボード | 長さ・先頭・文字の規則を守る。CSV の数式インジェクション対策が必要な名前を通さない |
+| `csv::parseLine` | スコアファイル（編集・改ざんされうる） | 解析した結果を書き出して読み直すと、元と同じになる |
+
+CI では毎回、各関数を 60 秒ずつ実行します。手元で実行する場合（Linux / macOS の Clang）：
+
+```bash
+cmake --preset fuzz && cmake --build --preset fuzz && ctest --preset fuzz
+mkdir -p work && ./build/fuzz/fuzz/fuzz_csv -max_total_time=60 work fuzz/corpus/csv
+```
+
 ### CI（GitHub Actions）
 
 | ジョブ | 環境 | 目的 |
@@ -186,11 +227,12 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 | Linux (GCC, ASan + UBSan) | Ubuntu 24.04 | メモリ破壊・未定義動作の実行時検出 |
 | Linux (Clang, ASan + UBSan) | Ubuntu 24.04 | 別コンパイラでの警告とサニタイザ |
 | Linux (GCC, Qt GUI) | Ubuntu 24.04 + Qt 6 | Qt 版の別環境でのビルドと画面テスト |
+| Fuzzing (libFuzzer) | Ubuntu 24.04 + Clang | 入力の解析処理に想定外の入力を大量に与え、クラッシュ・未定義動作・性質の違反を検出 |
 | Lint (clang-format, clang-tidy) | Ubuntu 24.04 + LLVM 23 | 書式の確認と静的解析（指摘があれば失敗） |
 | Coverage (gcov, lcov) | Ubuntu 24.04 + Qt 6 | カバレッジを計測し、Codecov に送る（HTML レポートは Artifacts） |
 
 - テストが 0 件なら失敗にする（`noTestsAction: error`）
-- 外部の Action はすべてコミットハッシュで固定し、実行環境のイメージもバージョンを固定する（固定漏れは Lint ジョブで検出）
+- 外部の Action はすべてコミットハッシュで固定し、実行環境のイメージもバージョンを固定する（固定漏れは Lint ジョブで検出）。CI で使う Python のツールも、間接的な依存関係までバージョンとハッシュを固定する
 - 依存関係の更新：GitHub Actions と Lint のツール（clang-format / clang-tidy）は Dependabot が毎週提案する。Dependabot の対象外の googletest は、`check-googletest` ワークフローが毎週新しいリリースを確認し、Issue で知らせる
 - OpenSSF Scorecard で、リポジトリのセキュリティ対策を毎週採点する（結果は Security タブと README のバッジで確認できる）
 - CodeQL（`security-extended`）で、製品のコード（`src/`・`qt/`）を解析する。push・PR・毎週の定期実行で動き、結果は Security タブに表示する
@@ -208,10 +250,12 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 | 保存先に書き込めない・ディスクフル | `flush` 後のストリーム状態で検出し、警告を表示。ゲームは異常終了させない |
 | 未定義動作・メモリ破壊 | サニタイザ付きのテストを CI で常時実行 |
 | 脆弱性につながるコードの混入 | CodeQL で、入力から危険な処理までのデータの流れを解析する。PR で新しい指摘が出れば、マージ前に気づける |
+| 想定していない入力によるクラッシュ・未定義動作 | 入力を受け取る処理（予想値・プレイヤー名・スコアファイルの行）を libFuzzer と ASan / UBSan でファジングし、性質（範囲内・往復で不変・危険な名前を通さない）も確認する |
 | 配布物に含まれる部品の把握 | リリースごとに SBOM（SPDX 2.3）を作って形式を検証し、配布物との対応を署名付きで記録する。脆弱性が公表されたときに、影響の有無をすぐに確認できる |
 | 依存関係の古さ・脆弱性 | Dependabot と googletest の確認ワークフローで更新を検知する。公開から 7 日たったバージョンだけを取り込み（クールダウン）、乗っ取られた直後のバージョンを避ける |
 | CI で使う外部 Action の改ざん | タグ（`@v4` など）ではなくコミットハッシュで固定し、書き換えられた Action が実行されないようにする |
-| 配布物の改ざん・なりすまし | SHA-256 チェックサムと、Sigstore で署名した来歴証明（SLSA build provenance）を付け、公開前に CI で検証する |
+| CI で使う Python のツールの改ざん | 間接的な依存関係まで含めてバージョンとハッシュを固定し（pip-tools）、`--require-hashes` でインストールする。PyPI のファイルが差し替えられても、インストールの時点で止まる |
+| 配布物の改ざん・なりすまし | SHA-256 チェックサムと、Sigstore で署名した来歴証明（SLSA build provenance）を付け、公開前に CI で検証する。証明のファイルも Release に添付し、GitHub に保存した証明を参照しなくても検証できるようにする |
 | セキュリティ対策の抜け漏れ | OpenSSF Scorecard で、外部の基準（依存関係の固定・最小権限・ブランチの保護など）に沿って毎週採点し、点数の低い項目を見直す |
 | 脆弱性の報告が公開されてしまう | [SECURITY.md](SECURITY.md) で報告の窓口（GitHub の非公開の脆弱性報告）と対応の流れを定め、修正前に悪用されることを防ぐ |
 
@@ -227,6 +271,7 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 │   └── main.cpp  Console 版の Composition Root
 ├── qt/           Qt 版 GUI（GameWindow / main.cpp / tests）
 ├── tests/        GoogleTest のテストとテストダブル
+├── fuzz/         libFuzzer のファジング用の関数とシードの入力
 ├── cmake/        警告設定・サニタイザ・アーキテクチャテスト
 ├── docs/         設計ドキュメント
 ├── CMakePresets.json
