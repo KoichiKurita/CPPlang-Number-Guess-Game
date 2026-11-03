@@ -3,9 +3,13 @@
 #   readability-uppercase-literal-suffix  : EXPECT_EQ(size, 1u) のような書き方はテストで慣用的
 #   readability-convert-member-functions-to-static : テストのフィクスチャや Qt Test のスロットは static にできない
 #   misc-use-internal-linkage             : TEST_F のフィクスチャは googletest の書き方に従う
+#   bugprone-unchecked-optional-access    : テストでは ASSERT_TRUE(x.has_value()) で確かめてから x-> を使う
+#     （中身がなければ ASSERT_TRUE がテストを終了させる）。googletest v1.18.0 で ASSERT_TRUE の展開が変わり、
+#     clang-tidy がこの確認を追えなくなって誤検知になるため。製品コード（src/・qt/）では引き続き有効
 InheritParentConfig: true
 Checks: >
   -modernize-use-nodiscard,
   -readability-uppercase-literal-suffix,
   -readability-convert-member-functions-to-static,
-  -misc-use-internal-linkage
+  -misc-use-internal-linkage,
+  -bugprone-unchecked-optional-access
