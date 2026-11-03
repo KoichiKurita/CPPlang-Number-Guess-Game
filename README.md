@@ -18,7 +18,7 @@
 |---|---|
 | 設計 | レイヤードアーキテクチャ＋ポート&アダプタ。ゲームのルールは I/O を持たない純粋関数 |
 | UI | 同じロジックを **Console 版** と **Qt 6 版（GUI）** で共有 |
-| テスト | GoogleTest / Qt Test で **71 件**（純粋関数・テストダブル・実ファイル・画面操作・アーキテクチャテスト）。カバレッジを Codecov で計測 |
+| テスト | GoogleTest / Qt Test で **77 件**（純粋関数・テストダブル・実ファイル・画面操作・アーキテクチャテスト）。カバレッジを Codecov で計測 |
 | CI | Windows（MinGW / MSVC）・Linux（GCC / Clang）の **7 ジョブ**。Linux では AddressSanitizer / UBSan |
 | 品質 | 警告をエラー扱い（`-Wall -Wextra -Wpedantic -Wconversion` ほか、MSVC は `/W4 /permissive-`）、clang-tidy による静的解析、clang-format による書式の統一 |
 | セキュリティ | 入力の許可リスト検証、CSV インジェクション対策（多層防御）、CI の最小権限 |
@@ -144,7 +144,7 @@ flowchart TD
 
 ## 品質保証
 
-### テスト（71 件）
+### テスト（77 件）
 
 | 対象 | テスト | 手法 |
 |---|---|---|

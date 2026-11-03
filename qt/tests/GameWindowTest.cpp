@@ -93,6 +93,41 @@ private slots:
         QVERIFY(!guess->isEnabled());
         QCOMPARE(repo.records().size(), std::size_t{1});
     }
+
+    void showsScoreFileLocationAndTooLargeHint() {
+        MockRandom random(5);
+        FakeScoreRepository repo;
+        GameSession session(random, repo);
+        GameWindow w(session, QStringLiteral("C:/data/scores.csv"));
+
+        QCOMPARE(find<QLabel>(w, "scoreFileLabel")->text(),
+                 QStringLiteral("Scores: C:/data/scores.csv"));
+
+        QTest::keyClicks(find<QLineEdit>(w, "nameEdit"), QStringLiteral("Ko1"));
+        QTest::mouseClick(find<QPushButton>(w, "startButton"), Qt::LeftButton);
+        auto* guess = find<QLineEdit>(w, "guessEdit");
+        QTest::keyClicks(guess, QStringLiteral("8"));
+        QTest::keyClick(guess, Qt::Key_Return);
+
+        QCOMPARE(find<QLabel>(w, "messageLabel")->text(), QStringLiteral("Too large"));
+    }
+
+    void showsWarningWhenScoreCannotBeSaved() {
+        MockRandom random(5);
+        FakeScoreRepository repo;
+        repo.failOnSave = true;
+        GameSession session(random, repo);
+        GameWindow w(session);
+
+        QTest::keyClicks(find<QLineEdit>(w, "nameEdit"), QStringLiteral("Ko1"));
+        QTest::mouseClick(find<QPushButton>(w, "startButton"), Qt::LeftButton);
+        auto* guess = find<QLineEdit>(w, "guessEdit");
+        QTest::keyClicks(guess, QStringLiteral("5"));
+        QTest::keyClick(guess, Qt::Key_Return);
+
+        QCOMPARE(find<QLabel>(w, "bestLabel")->text(),
+                 QStringLiteral("Warning: Could not save your score: disk full"));
+    }
 };
 
 QTEST_MAIN(GameWindowTest)

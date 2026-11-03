@@ -98,6 +98,7 @@ GameWindow::GameWindow(GameSession& session, const QString& scoreFileText, QWidg
     layout->addWidget(bestLabel_);
     if (!scoreFileText.isEmpty()) {
         auto* fileLabel = new QLabel(QStringLiteral("Scores: %1").arg(scoreFileText), this);
+        fileLabel->setObjectName(QStringLiteral("scoreFileLabel"));
         fileLabel->setWordWrap(true);
         fileLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
         layout->addWidget(fileLabel);
