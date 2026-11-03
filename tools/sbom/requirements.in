@@ -1,0 +1,4 @@
+# SBOM（SPDX）の形式を検証するツール。更新は Dependabot が提案する
+#
+# このファイルを編集したら、requirements.txt（ハッシュ付きの固定版）を作り直す（README の「Python のツール」を参照）
+spdx-tools==0.8.5
