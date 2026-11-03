@@ -81,3 +81,6 @@ leak-*
 timeout-*
 oom-*
 slow-unit-*
+
+# Python の仮想環境（requirements.txt を作り直すときに使う）
+.venv/
