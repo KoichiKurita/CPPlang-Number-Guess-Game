@@ -1,10 +1,10 @@
+#include "Version.h"
 #include "app/GameController.h"
 #include "app/ports/IGameUI.h"
-#include "infra/RandomMT.h"
 #include "infra/CsvScoreRepository.h"
+#include "infra/RandomMT.h"
 #include "infra/ScoreFilePath.h"
 #include "ui/ConsoleUI.h"
-#include "Version.h"
 
 #include <cstdlib>
 #include <exception>
@@ -53,17 +53,14 @@ int main(int argc, char* argv[]) {
         GameController controller(random, repo, ui);
         controller.run();
         return EXIT_SUCCESS;
-    }
-    catch (const InputClosedError&) {
+    } catch (const InputClosedError&) {
         // ユーザーが入力を終了した（正常な中断）
         std::cout << "\nInput closed. Bye.\n";
         return EXIT_SUCCESS;
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         std::cerr << "Fatal error: " << e.what() << "\n";
         return EXIT_FAILURE;
-    }
-    catch (...) {
+    } catch (...) {
         std::cerr << "Fatal error: unknown exception\n";
         return EXIT_FAILURE;
     }

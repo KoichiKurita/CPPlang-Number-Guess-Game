@@ -19,13 +19,9 @@ public:
     MockUI(Difficulty diff, std::queue<int> guesses, std::string player = "Ko1")
         : player_(std::move(player)), diff_(std::move(diff)), guesses_(std::move(guesses)) {}
 
-    std::string inputPlayerName() override {
-        return player_;
-    }
+    std::string inputPlayerName() override { return player_; }
 
-    Difficulty selectDifficulty() override {
-        return diff_;
-    }
+    Difficulty selectDifficulty() override { return diff_; }
 
     int inputGuess(const Difficulty&) override {
         if (guesses_.empty()) {
@@ -36,17 +32,13 @@ public:
         return v;
     }
 
-    void handleEvent(const GameEvent& event) override {
-        events_.push_back(event);
-    }
+    void handleEvent(const GameEvent& event) override { events_.push_back(event); }
 
     void showBestScore(const ScoreRecord& best, bool isNewRecord) override {
         bestScoreShown_ = BestScoreShown{best, isNewRecord};
     }
 
-    void showWarning(const std::string& message) override {
-        warnings_.push_back(message);
-    }
+    void showWarning(const std::string& message) override { warnings_.push_back(message); }
 
     const std::vector<GameEvent>& events() const { return events_; }
     const std::optional<BestScoreShown>& bestScoreShown() const { return bestScoreShown_; }

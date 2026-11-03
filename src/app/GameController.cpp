@@ -3,15 +3,8 @@
 #include <string>
 #include <utility>
 
-GameController::GameController(
-    IRandom& random,
-    IScoreRepository& repo,
-    IGameUI& ui
-)
-    : session_(random, repo),
-      ui_(ui)
-{
-}
+GameController::GameController(IRandom& random, IScoreRepository& repo, IGameUI& ui)
+    : session_(random, repo), ui_(ui) {}
 
 void GameController::run() {
     std::string player = ui_.inputPlayerName();

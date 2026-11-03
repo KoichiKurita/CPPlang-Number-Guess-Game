@@ -7,8 +7,8 @@
 #include <vector>
 
 // 指定した難易度の最高記録（試行回数が最少）を返す。同点なら先に記録されたもの。
-inline std::optional<ScoreRecord> bestScore(
-    const std::vector<ScoreRecord>& records, std::string_view difficulty) {
+inline std::optional<ScoreRecord> bestScore(const std::vector<ScoreRecord>& records,
+                                            std::string_view difficulty) {
 
     std::optional<ScoreRecord> best;
     for (const auto& r : records) {

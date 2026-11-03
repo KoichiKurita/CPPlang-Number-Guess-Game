@@ -1,7 +1,7 @@
-#include <gtest/gtest.h>
 #include "app/GameSession.h"
 #include "FakeScoreRepository.h"
 #include "MockRandom.h"
+#include <gtest/gtest.h>
 
 #include <stdexcept>
 #include <variant>
@@ -42,7 +42,7 @@ TEST(GameSessionTest, WrongGuessReturnsHintWithoutReport) {
     EXPECT_FALSE(outcome.report.has_value());
     EXPECT_TRUE(session.isPlaying());
     EXPECT_EQ(session.attempts(), 1);
-    EXPECT_TRUE(repo.records().empty());   // まだ保存しない
+    EXPECT_TRUE(repo.records().empty()); // まだ保存しない
 }
 
 TEST(GameSessionTest, CorrectGuessFinishesAndSavesScore) {
@@ -76,7 +76,7 @@ TEST(GameSessionTest, GuessAfterFinishThrows) {
     session.submitGuess(5);
 
     EXPECT_THROW(session.submitGuess(5), std::logic_error);
-    EXPECT_EQ(repo.records().size(), 1u);  // 二重に保存されない
+    EXPECT_EQ(repo.records().size(), 1u); // 二重に保存されない
 }
 
 TEST(GameSessionTest, RestartResetsAttempts) {
@@ -87,7 +87,7 @@ TEST(GameSessionTest, RestartResetsAttempts) {
     session.submitGuess(1);
     session.submitGuess(2);
 
-    session.start("Bob", Difficulty::Hard());   // 途中で新しいゲームを始める
+    session.start("Bob", Difficulty::Hard()); // 途中で新しいゲームを始める
 
     EXPECT_TRUE(session.isPlaying());
     EXPECT_EQ(session.attempts(), 0);

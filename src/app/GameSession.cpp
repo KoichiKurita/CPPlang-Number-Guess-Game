@@ -6,13 +6,12 @@
 #include <stdexcept>
 #include <utility>
 
-GameSession::GameSession(IRandom& random, IScoreRepository& repo)
-    : random_(random), repo_(repo) {}
+GameSession::GameSession(IRandom& random, IScoreRepository& repo) : random_(random), repo_(repo) {}
 
 void GameSession::start(std::string player, Difficulty diff) {
     const int answer = random_.generate(diff.min, diff.max);
     player_ = std::move(player);
-    state_ = GameState{ std::move(diff), answer, 0, false };
+    state_ = GameState{std::move(diff), answer, 0, false};
 }
 
 GuessOutcome GameSession::submitGuess(int value) {
@@ -23,9 +22,9 @@ GuessOutcome GameSession::submitGuess(int value) {
     auto [next, event] = guess(*state_, value);
     state_ = next;
 
-    GuessOutcome outcome{ event, std::nullopt };
+    GuessOutcome outcome{event, std::nullopt};
     if (state_->finished) {
-        outcome.report = recordScore(ScoreRecord{ player_, state_->diff.name, state_->attempts });
+        outcome.report = recordScore(ScoreRecord{player_, state_->diff.name, state_->attempts});
     }
     return outcome;
 }
@@ -54,16 +53,14 @@ ScoreReport GameSession::recordScore(const ScoreRecord& record) {
     try {
         previousBest = bestScore(repo_.loadAll(), record.difficulty);
         loaded = true;
-    }
-    catch (const ScoreRepositoryError& e) {
+    } catch (const ScoreRepositoryError& e) {
         report.warnings.push_back(std::string("Could not read past scores: ") + e.what());
     }
 
     // 2. 今回のスコアを保存する
     try {
         repo_.save(record);
-    }
-    catch (const ScoreRepositoryError& e) {
+    } catch (const ScoreRepositoryError& e) {
         report.warnings.push_back(std::string("Could not save your score: ") + e.what());
         return report;
     }

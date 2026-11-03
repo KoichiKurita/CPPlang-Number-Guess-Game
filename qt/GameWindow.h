@@ -20,8 +20,7 @@ class GameWindow : public QWidget {
     Q_OBJECT
 
 public:
-    explicit GameWindow(GameSession& session,
-                        const QString& scoreFileText = QString(),
+    explicit GameWindow(GameSession& session, const QString& scoreFileText = QString(),
                         QWidget* parent = nullptr);
 
 private:

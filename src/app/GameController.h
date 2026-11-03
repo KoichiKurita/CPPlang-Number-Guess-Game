@@ -9,11 +9,7 @@
 // ルールの適用とスコアの保存は GameSession に任せる。
 class GameController {
 public:
-    GameController(
-        IRandom& random,
-        IScoreRepository& repo,
-        IGameUI& ui
-    );
+    GameController(IRandom& random, IScoreRepository& repo, IGameUI& ui);
 
     void run();
 
