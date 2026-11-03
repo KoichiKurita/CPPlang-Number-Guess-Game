@@ -44,6 +44,7 @@ classDiagram
         +string player
         +string difficulty
         +int attempts
+        +optional~int64~ playedAt
     }
     class GameLogic {
         <<functions>>
@@ -62,6 +63,11 @@ classDiagram
         <<functions>>
         +bestScore(records, difficulty) optional~ScoreRecord~
         +isNewRecord(previousBest, attempts) bool
+    }
+    class Timestamp {
+        <<functions>>
+        +format(seconds) string
+        +parse(text) optional~int64~
     }
 
     GameState *-- Difficulty
@@ -125,7 +131,7 @@ Console 版は `GameController` がこの流れをループで回し、Qt 版は
 ## 5. 主な設計判断
 
 ### ポートを app 層に置く
-`IRandom` / `IScoreRepository` / `IGameUI` は、それを**使う側**の app 層が定義し、infra と ui が実装します。app は具体的な実装を知らないので、テストでは Mock / Fake に差し替えられます（依存性逆転の原則）。
+`IRandom` / `IScoreRepository` / `IGameUI` / `IClock` は、それを**使う側**の app 層が定義し、infra と ui が実装します。app は具体的な実装を知らないので、テストでは Mock / Fake に差し替えられます（依存性逆転の原則）。乱数や現在時刻のように、実行のたびに変わるものもポートの向こうに置くことで、テストの結果を毎回同じにしています。
 
 ### ゲーム進行を「1 手ずつ」の API にする
 当初の `GameController::run()` は「入力を待って返る」同期ループで、GUI のイベントループと両立しませんでした。そこで `GameSession`（`start` / `submitGuess`）に分離し、入力の待ち方を呼び出し側に任せました。分離の前後で `GameControllerTest` は変更せずにすべて成功しており、外から見た振る舞いを変えていないことを確認しています。

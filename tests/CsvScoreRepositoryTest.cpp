@@ -1,9 +1,11 @@
 #include "infra/CsvScoreRepository.h"
 #include <gtest/gtest.h>
 
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <optional>
 #include <string>
 
 namespace fs = std::filesystem;
@@ -46,16 +48,18 @@ TEST_F(CsvScoreRepositoryTest, SaveWritesHeaderOnceThenAppends) {
     const auto file = dir_ / "scores.csv";
     CsvScoreRepository repo(file);
 
-    repo.save({"Ko1", "Easy", 3});
-    repo.save({"Bob", "Hard", 7});
+    repo.save({"Ko1", "Easy", 3, 1793716507});
+    repo.save({"Bob", "Hard", 7, std::nullopt}); // 日時が不明なら空にする
 
-    EXPECT_EQ(readFile(file), "player,difficulty,attempts\nKo1,Easy,3\nBob,Hard,7\n");
+    EXPECT_EQ(readFile(file), "player,difficulty,attempts,played_at\n"
+                              "Ko1,Easy,3,2026-11-03T14:35:07Z\n"
+                              "Bob,Hard,7,\n");
 }
 
 TEST_F(CsvScoreRepositoryTest, SaveThenLoadRoundTrip) {
     CsvScoreRepository repo(dir_ / "scores.csv");
-    repo.save({"Ko1", "Easy", 3});
-    repo.save({"John Smith", "Normal", 12});
+    repo.save({"Ko1", "Easy", 3, 1793716507});
+    repo.save({"John Smith", "Normal", 12, std::nullopt});
 
     const auto records = repo.loadAll();
 
@@ -63,8 +67,43 @@ TEST_F(CsvScoreRepositoryTest, SaveThenLoadRoundTrip) {
     EXPECT_EQ(records[0].player, "Ko1");
     EXPECT_EQ(records[0].difficulty, "Easy");
     EXPECT_EQ(records[0].attempts, 3);
+    EXPECT_EQ(records[0].playedAt, std::optional<std::int64_t>(1793716507));
     EXPECT_EQ(records[1].player, "John Smith");
     EXPECT_EQ(records[1].attempts, 12);
+    EXPECT_FALSE(records[1].playedAt.has_value());
+}
+
+// v2.4.0 までの形式（日時の列がない）のファイルも読め、追記した新しい形式の行と混在できる
+TEST_F(CsvScoreRepositoryTest, ReadsLegacyFormatAndAppendsNewFormat) {
+    const auto file = dir_ / "scores.csv";
+    writeFile(file, "player,difficulty,attempts\n"
+                    "Ko1,Easy,3\n");
+    CsvScoreRepository repo(file);
+
+    repo.save({"Bob", "Hard", 7, 1793716507});
+    const auto records = repo.loadAll();
+
+    ASSERT_EQ(records.size(), 2u);
+    EXPECT_EQ(records[0].player, "Ko1");
+    EXPECT_FALSE(records[0].playedAt.has_value());
+    EXPECT_EQ(records[1].player, "Bob");
+    EXPECT_EQ(records[1].playedAt, std::optional<std::int64_t>(1793716507));
+    // 既存のファイルには、ヘッダを書き足さない
+    EXPECT_EQ(readFile(file), "player,difficulty,attempts\n"
+                              "Ko1,Easy,3\n"
+                              "Bob,Hard,7,2026-11-03T14:35:07Z\n");
+}
+
+// PC の時計が大きくずれていて、扱える範囲外の日時になった場合も、スコアは日時なしで保存する
+TEST_F(CsvScoreRepositoryTest, SavesOutOfRangeTimestampAsUnknown) {
+    const auto file = dir_ / "scores.csv";
+    CsvScoreRepository repo(file);
+
+    repo.save({"Ko1", "Easy", 3, -1});
+
+    const auto records = repo.loadAll();
+    ASSERT_EQ(records.size(), 1u);
+    EXPECT_FALSE(records[0].playedAt.has_value());
 }
 
 TEST_F(CsvScoreRepositoryTest, CreatesMissingParentDirectories) {
@@ -82,11 +121,14 @@ TEST_F(CsvScoreRepositoryTest, SkipsMalformedOrInvalidLines) {
     writeFile(file,
               "player,difficulty,attempts\n"
               "Ko1,Easy,3\n"
-              "Easy,8\n"          // 列が足りない（旧形式）
-              "Bob,Hard,abc\n"    // 回数が数字ではない
-              "Eve,Hard,0\n"      // 回数が範囲外
-              "'=cmd,Hard,1\n"    // 名前の検証に通らない
-              "\"broken,Easy,1\n" // クォートが閉じていない
+              "Easy,8\n"                            // 列が足りない
+              "Bob,Hard,abc\n"                      // 回数が数字ではない
+              "Eve,Hard,0\n"                        // 回数が範囲外
+              "'=cmd,Hard,1\n"                      // 名前の検証に通らない
+              "\"broken,Easy,1\n"                   // クォートが閉じていない
+              "Dan,Easy,2,2026-02-30T00:00:00Z\n"   // 存在しない日付
+              "Dan,Easy,2,yesterday\n"              // 日時の形式が不正
+              "Dan,Easy,2,2026-11-03T14:35:07Z,x\n" // 列が多すぎる
               "\n"
               "Carol,Normal,5\r\n"); // CRLF の行
 
