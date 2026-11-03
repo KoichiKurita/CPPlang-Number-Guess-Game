@@ -1,8 +1,14 @@
 include(FetchContent)
 
+# googletest はタグではなくコミットハッシュで固定する（タグは後から付け替えられるため）。
+# 新しいリリースは .github/workflows/check-googletest.yml が毎週確認し、Issue で知らせる。
+# 更新するときは、次の 2 行をそろえて書き換える（バージョンとコミットの一致も同じワークフローで検証する）。
+set(NGG_GOOGLETEST_VERSION v1.14.0)
+set(NGG_GOOGLETEST_COMMIT f8d7d77c06936315286eb55f8de22cd23c188571)
+
 FetchContent_Declare(
     googletest
-    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+    URL https://github.com/google/googletest/archive/${NGG_GOOGLETEST_COMMIT}.zip
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 

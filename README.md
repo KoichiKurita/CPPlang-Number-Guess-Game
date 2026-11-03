@@ -56,6 +56,17 @@ gh attestation verify .\NumberGuessGame-v<バージョン>-windows-x64.zip --rep
 
 来歴証明の一覧は、リポジトリの [Attestations](https://github.com/KoichiKurita/CPPlang-Number-Guess-Game/attestations) でも確認できます。
 
+### SBOM（ソフトウェア部品表）
+
+各リリースには、配布物に含まれる部品（Qt・ICU・コンパイラのランタイムなど、MSYS2 から同梱したライブラリ）の名前・バージョン・ライセンスを、標準形式（SPDX 2.3）で記した `NumberGuessGame-v<バージョン>-windows-x64.spdx.json` を添付しています。
+SBOM と配布物の対応も署名付きで記録しているので、次のコマンドで検証できます。
+
+```powershell
+gh attestation verify .\NumberGuessGame-v<バージョン>-windows-x64.zip --repo KoichiKurita/CPPlang-Number-Guess-Game --predicate-type https://spdx.dev/Document/v2.3
+```
+
+脆弱性が公表されたときは、この SBOM を見れば、影響を受けるライブラリが配布物に含まれているかをすぐに確認できます。
+
 ## ビルドと実行
 
 ### 必要なもの
@@ -178,6 +189,8 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 | Coverage (gcov, lcov) | Ubuntu 24.04 + Qt 6 | カバレッジを計測し、Codecov に送る（HTML レポートは Artifacts） |
 
 - テストが 0 件なら失敗にする（`noTestsAction: error`）
+- 外部の Action はすべてコミットハッシュで固定し、実行環境のイメージもバージョンを固定する（固定漏れは Lint ジョブで検出）
+- 依存関係の更新：GitHub Actions と Lint のツール（clang-format / clang-tidy）は Dependabot が毎週提案する。Dependabot の対象外の googletest は、`check-googletest` ワークフローが毎週新しいリリースを確認し、Issue で知らせる
 - ワークフローの権限は `contents: read` のみ（最小権限）。リリースでは、署名（来歴証明）と公開のジョブにだけ、それぞれ必要な書き込み権限を与える
 - `main` / `develop` はルールセットで保護（PR 必須・全ジョブ成功必須・強制 push 禁止）
 
@@ -191,6 +204,9 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 | スコアファイルの改ざん・破損 | 壊れた行だけを読み飛ばして続行 |
 | 保存先に書き込めない・ディスクフル | `flush` 後のストリーム状態で検出し、警告を表示。ゲームは異常終了させない |
 | 未定義動作・メモリ破壊 | サニタイザ付きのテストを CI で常時実行 |
+| 配布物に含まれる部品の把握 | リリースごとに SBOM（SPDX 2.3）を作って形式を検証し、配布物との対応を署名付きで記録する。脆弱性が公表されたときに、影響の有無をすぐに確認できる |
+| 依存関係の古さ・脆弱性 | Dependabot と googletest の確認ワークフローで更新を検知する。公開から 7 日たったバージョンだけを取り込み（クールダウン）、乗っ取られた直後のバージョンを避ける |
+| CI で使う外部 Action の改ざん | タグ（`@v4` など）ではなくコミットハッシュで固定し、書き換えられた Action が実行されないようにする |
 | 配布物の改ざん・なりすまし | SHA-256 チェックサムと、Sigstore で署名した来歴証明（SLSA build provenance）を付け、公開前に CI で検証する |
 
 ## ディレクトリ構成
