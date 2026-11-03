@@ -1,0 +1,55 @@
+name: Scorecard
+
+# OpenSSF Scorecard で、リポジトリのセキュリティ対策（依存関係の固定・最小権限・ブランチの保護・
+# 署名など）を外部の基準で採点する。結果は Security タブ（Code scanning）と README のバッジで確認できる。
+#
+# 結果を公開する（publish_results）ため、Scorecard の API が次の制約を課している。
+#   - ワークフロー全体に env・defaults・書き込み権限を置かない
+#   - id-token: write は、このジョブにだけ与える
+#   - このジョブでは、許可された Action（checkout・upload-artifact・upload-sarif・scorecard-action）だけを使う
+# また、既定のブランチ（main）でのみ結果を公開できるため、main への push と定期実行で動かす。
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "30 1 * * 1"   # 毎週月曜 10:30（日本時間）
+  # ブランチの保護の設定を変えたら、採点し直す
+  branch_protection_rule:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read           # ワークフローの実行結果を読む
+      security-events: write  # 結果を Code scanning に送る
+      id-token: write         # 結果を公開するときの本人確認（OIDC トークン）
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false   # 後続のステップに認証情報を残さない
+
+      - name: Run analysis
+        uses: ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e # v2.5.0
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true   # バッジと公開 API に結果を載せる
+
+      # 結果のファイルを 5 日間だけ残す（失敗したときの調査用）
+      - name: Upload results
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: scorecard-results
+          path: results.sarif
+          retention-days: 5
+
+      - name: Upload to code scanning
+        uses: github/codeql-action/upload-sarif@1fc58d04a4d4374f921bdac573c3811c240f9c26 # v4.39.2
+        with:
+          sarif_file: results.sarif
