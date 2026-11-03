@@ -4,3 +4,6 @@
 
 # シェルスクリプトは Windows でチェックアウトしても LF のまま（CRLF だと bash が動かない）
 *.sh text eol=lf
+
+# ファジングのシードの入力はバイト単位で意味があるため、改行コードを変換しない
+fuzz/corpus/** -text
