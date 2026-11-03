@@ -107,6 +107,7 @@ cmake --preset qt && cmake --build --preset qt && ctest --preset qt
 | `asan` | `ci` ＋ AddressSanitizer / UBSan（Linux / macOS の GCC・Clang） |
 | `tidy` | `qt` ＋ clang-tidy（コンパイルと同時に静的解析） |
 | `coverage` | `qt` ＋ カバレッジ計測（gcov。GCC・Clang） |
+| `fuzz` | Clang ＋ libFuzzer / ASan / UBSan でファジング用の実行ファイルとテストをビルド（Linux / macOS） |
 | `release` | 配布用の Release ビルド（Qt 版を含む） |
 | `msvc` | Visual Studio（Windows） |
 
@@ -177,6 +178,24 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 ./scripts/coverage.sh build/coverage coverage   # coverage/html/index.html をブラウザで開く
 ```
 
+### ファジング
+
+外から入ってくる文字列を最初に受け取る処理に、[libFuzzer](https://llvm.org/docs/LibFuzzer.html) で自動生成した入力を大量に与え、AddressSanitizer / UBSan と組み合わせて、クラッシュ・メモリ破壊・未定義動作を検出します。
+クラッシュしないことに加えて、どんな入力でも成り立つべき**性質**も確認しています。
+
+| 対象 | 入力の出どころ | 確認する性質 |
+|---|---|---|
+| `parseIntInRange` / `parseDifficulty` | キーボード | 値は必ず範囲内。文字列に戻して解析し直すと同じ値。難易度は 3 種類のどれか |
+| `parsePlayerName` | キーボード | 長さ・先頭・文字の規則を守る。CSV の数式インジェクション対策が必要な名前を通さない |
+| `csv::parseLine` | スコアファイル（編集・改ざんされうる） | 解析した結果を書き出して読み直すと、元と同じになる |
+
+CI では毎回、各関数を 60 秒ずつ実行します。手元で実行する場合（Linux / macOS の Clang）：
+
+```bash
+cmake --preset fuzz && cmake --build --preset fuzz && ctest --preset fuzz
+mkdir -p work && ./build/fuzz/fuzz/fuzz_csv -max_total_time=60 work fuzz/corpus/csv
+```
+
 ### CI（GitHub Actions）
 
 | ジョブ | 環境 | 目的 |
@@ -186,6 +205,7 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 | Linux (GCC, ASan + UBSan) | Ubuntu 24.04 | メモリ破壊・未定義動作の実行時検出 |
 | Linux (Clang, ASan + UBSan) | Ubuntu 24.04 | 別コンパイラでの警告とサニタイザ |
 | Linux (GCC, Qt GUI) | Ubuntu 24.04 + Qt 6 | Qt 版の別環境でのビルドと画面テスト |
+| Fuzzing (libFuzzer) | Ubuntu 24.04 + Clang | 入力の解析処理に想定外の入力を大量に与え、クラッシュ・未定義動作・性質の違反を検出 |
 | Lint (clang-format, clang-tidy) | Ubuntu 24.04 + LLVM 23 | 書式の確認と静的解析（指摘があれば失敗） |
 | Coverage (gcov, lcov) | Ubuntu 24.04 + Qt 6 | カバレッジを計測し、Codecov に送る（HTML レポートは Artifacts） |
 
@@ -208,6 +228,7 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 | 保存先に書き込めない・ディスクフル | `flush` 後のストリーム状態で検出し、警告を表示。ゲームは異常終了させない |
 | 未定義動作・メモリ破壊 | サニタイザ付きのテストを CI で常時実行 |
 | 脆弱性につながるコードの混入 | CodeQL で、入力から危険な処理までのデータの流れを解析する。PR で新しい指摘が出れば、マージ前に気づける |
+| 想定していない入力によるクラッシュ・未定義動作 | 入力を受け取る処理（予想値・プレイヤー名・スコアファイルの行）を libFuzzer と ASan / UBSan でファジングし、性質（範囲内・往復で不変・危険な名前を通さない）も確認する |
 | 配布物に含まれる部品の把握 | リリースごとに SBOM（SPDX 2.3）を作って形式を検証し、配布物との対応を署名付きで記録する。脆弱性が公表されたときに、影響の有無をすぐに確認できる |
 | 依存関係の古さ・脆弱性 | Dependabot と googletest の確認ワークフローで更新を検知する。公開から 7 日たったバージョンだけを取り込み（クールダウン）、乗っ取られた直後のバージョンを避ける |
 | CI で使う外部 Action の改ざん | タグ（`@v4` など）ではなくコミットハッシュで固定し、書き換えられた Action が実行されないようにする |
@@ -227,6 +248,7 @@ cmake --preset coverage && cmake --build --preset coverage && ctest --preset cov
 │   └── main.cpp  Console 版の Composition Root
 ├── qt/           Qt 版 GUI（GameWindow / main.cpp / tests）
 ├── tests/        GoogleTest のテストとテストダブル
+├── fuzz/         libFuzzer のファジング用の関数とシードの入力
 ├── cmake/        警告設定・サニタイザ・アーキテクチャテスト
 ├── docs/         設計ドキュメント
 ├── CMakePresets.json
